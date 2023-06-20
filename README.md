@@ -66,6 +66,7 @@ En Git, en el repositorio ***kcfp-argocd-app***, tenemos que configurar una ***d
      ```sh
      ssh-keygen -t ed25519 -f $HOME/.ssh/argocd_app_kc
      ```
+     > Pulsar el botón Enter en todos las preguntas requeridas
 
 
 
