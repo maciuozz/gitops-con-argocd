@@ -11,7 +11,7 @@
 - [kubeseal](https://github.com/bitnami-labs/sealed-secrets#kubeseal)
 
 En este proyecto he desarrollado una aplicación y he configurado 2 repositorios en GitHub para alojar diferentes aspectos del proyecto. El primer repositorio, llamado ***kcfp-app-argocd-src***, contiene el código fuente de la aplicación. Aquí se encuentran todos los archivos y componentes relacionados con la lógica de la aplicación.
-El segundo repositorio, llamado ***kcfp-argocd-app***, almacena los manifiestos de Kubernetes, incluyendo tanto la definición de la aplicación como los sealed secrets cifrados. Utilizo Helm para empaquetar estos manifiestos. Este repositorio contiene los archivos YAML que describen cómo se deben desplegar y configurar los recursos de Kubernetes para mi aplicación, así como los secretos cifrados que se utilizan en ella. La configuración de "sealed secrets" nos permite mantener la seguridad de los secretos sensibles, ya que se almacenan cifrados y solo se pueden descifrar dentro del clúster. Esto garantiza que los secretos no estén expuestos en texto plano en el repositorio. En cuanto a Continuous Integration (CI) he utilizado GitHub Actions para realizar acciones automatizadas cada vez que se realizan cambios en el repositorio de código con flujos de trabajo (lint, test y release) para realizar tareas como verificar la calidad del código, ejecutar pruebas y lanzar nuevas versiones de la aplicación. He aprovechado ***semantic release*** para generar automáticamente versiones basadas en los cambios en el repositorio y generar notas de lanzamiento. En cuanto a Continuous Deployment (CD), he utilizado ArgoCD con la metodología GitOps para gestionar y desplegar mi aplicación de manera automatizada. GitOps es una metodología para gestionar y operar aplicaciones en entornos de Kubernetes utilizando Git como fuente única de verdad. En el contexto de GitOps, todos los recursos de la aplicación, como configuraciones, definiciones de despliegue y políticas, se almacenan y versionan en un repositorio Git. La idea principal es que cualquier cambio en el estado deseado de la aplicación se refleje automáticamente en el clúster de Kubernetes a través de un proceso de reconciliación continua. En GitOps, el ciclo de vida de una aplicación se gestiona a través de la utilización de herramientas como ArgoCD, FluxCD o Jenkins. Estas herramientas se encargan de comparar el estado actual del clúster con la definición almacenada en el repositorio Git y, si hay diferencias, realizan las acciones necesarias para alcanzar el estado deseado. Esto puede incluir desplegar nuevas versiones de la aplicación, realizar actualizaciones, revertir cambios y gestionar secretos. Al elegir ArgoCD utilizo tambien un repositorio local que contiene archivos YAML con configuraciones específicas para desplegar el chart predefinido de ArgoCD en GKE. Esta configuración personalizada complementa las opciones y configuraciones predeterminadas proporcionadas por el chart de ArgoCD. Desplegar ArgoCD y la aplicación en GKE de GCP proporciona beneficios como una gestión simplificada de Kubernetes, alta disponibilidad y escalabilidad, integración con servicios de Google Cloud, seguridad y cumplimiento normativo, así como una estrecha integración entre ArgoCD y el entorno de GKE. Estas ventajas combinadas ayudan a mejorar la eficiencia, la confiabilidad y la seguridad de la aplicación.
+El segundo repositorio, llamado ***kcfp-argocd-app***, almacena los manifiestos de Kubernetes, incluyendo tanto la definición de la aplicación como los sealed secrets cifrados. Utilizo Helm para empaquetar estos manifiestos. Este repositorio contiene los archivos YAML que describen cómo se deben desplegar y configurar los recursos de Kubernetes para mi aplicación, así como los secretos cifrados que se utilizan en ella. La configuración de "sealed secrets" nos permite mantener la seguridad de los secretos sensibles, ya que se almacenan cifrados y solo se pueden descifrar dentro del clúster. Esto garantiza que los secretos no estén expuestos en texto plano en el repositorio. En cuanto a Continuous Integration (CI) he utilizado GitHub Actions para realizar acciones automatizadas cada vez que se realizan cambios en el repositorio de código con flujos de trabajo (lint, test y release) para realizar tareas como verificar la calidad del código, ejecutar pruebas y lanzar nuevas versiones de la aplicación. He aprovechado ***semantic release*** para generar automáticamente versiones basadas en los cambios en el repositorio y generar notas de lanzamiento. En cuanto a Continuous Deployment (CD), he utilizado ArgoCD con la metodología GitOps para gestionar y desplegar mi aplicación de manera automatizada. GitOps es una metodología para gestionar y operar aplicaciones en entornos de Kubernetes utilizando Git como fuente única de verdad. En el contexto de GitOps, todos los recursos de la aplicación, como configuraciones, definiciones de despliegue y políticas, se almacenan y versionan en un repositorio Git. La idea principal es que cualquier cambio en el estado deseado de la aplicación se refleje automáticamente en el clúster de Kubernetes a través de un proceso de reconciliación continua. En GitOps, el ciclo de vida de una aplicación se gestiona a través de la utilización de herramientas como ArgoCD, FluxCD o Jenkins. Estas herramientas se encargan de comparar el estado actual del clúster con la definición almacenada en el repositorio Git y, si hay diferencias, realizan las acciones necesarias para alcanzar el estado deseado. Esto puede incluir desplegar nuevas versiones de la aplicación, realizar actualizaciones, revertir cambios y gestionar secretos. Al elegir ArgoCD utilizo tambien el repositorio ***gitops-con-argocd*** que contiene archivos YAML con configuraciones específicas para desplegar el chart predefinido de ArgoCD en GKE. Este repositorio no se carga en Git, sino que se utiliza localmente. Desplegar ArgoCD y la aplicación en GKE de GCP proporciona beneficios como una gestión simplificada de Kubernetes, alta disponibilidad y escalabilidad, integración con servicios de Google Cloud, seguridad y cumplimiento normativo, así como una estrecha integración entre ArgoCD y el entorno de GKE. Estas ventajas combinadas ayudan a mejorar la eficiencia, la confiabilidad y la seguridad de la aplicación.
 La aplicación se basa principalmente en el material abordado durante la asignatura de SRE. He integrado algunas de las aplicaciones que desarrollé durante las prácticas del bootcamp, agregando también nuevas funcionalidades y elementos. Es una aplicación web FastAPI que consta de 7 endpoints y se conecta a una base de datos de MongoDB.
 Observamos la ejecución de los 7 tests, uno para cada endpoint, con el informe de cobertura de código:
 
@@ -59,46 +59,11 @@ Dentro del repositorio ***kcfp-app-argocd-src*** generamos un secret, GHCR_PAT, 
 
 <img width="1224" alt="233875331-b1faa951-b2cb-40e8-a741-0ac7ccf365ff" src="https://github.com/maciuozz/gitops-con-argocd/assets/118285718/66ebabf9-1007-48f8-b3a3-0f32f45b35c2">
 
+Después de clonar los 3 repositorios, abrimos 3 pestañas en la terminal y nos ubicamos en cada uno de los repositorios: ***kcfp-app-argocd-src, kcfp-argocd-app y gitops-con-argocd***, respectivamente.
 
-1. Acceder a [GitHub](https://github.com) y hacer click en el botón de la esquina superior izquierda de nombre **New**, para crear un nuevo repositorio, tal y como se muestra en la siguiente imagen.
 
-    ![Select create app argocd](./img/select_create_app_argocd.png)
 
-2. Crear un repositorio en GitHub, **dentro de la cuenta de usuario utilizada**, para una aplicación que utilice el lenguaje Python, rellenando los datos de la siguiente forma:
 
-    - **Repository name**: `test-app-argocd-src`
-    - **Description**: `App source coud that use GitHub Actions for CI and ArgoCD for CD`
-    - Marcar opción **Private**
-    - Marcar opción **Add a README file**
-
-    Debería quedar algo como lo mostrado en la siguiente captura.
-
-    ![Create GitHub repo app python jenkin](./img/create_repo_argocd_app_src.png)
-
-    Hacer click sobre el botón **Create repository**, señalado en la imagen mediante un rectángulo rojo.
-
-3. Se accederá al repositorio creado, viéndose algo como lo mostrado en la siguiente captura.
-
-    ![Repository ArgoCD App Src Created](./img/repo_argocd_app_src_created.png)
-
-4. Hacer click sobre la acción **<> Code**, señalada en la imagen anterior mediante un rectángulo rojo. Copiar la dirección que muestra esta opción para descargar el repositorio localmente.
-
-5. Es necesario configurar una serie de `secrets` en el repositorio para utilizar en los github actions:
-
-   - `DOCKERHUB_TOKEN`: Token obtenido en el proceso [Creación de cuenta en DockerHub y obtención de token](../1-pipelines-github-workflows-jenkins/README.md#creación-de-cuenta-en-dockerhub-y-obtención-de-token) del laboratorio anterior
-   - `DOCKERHUB_USERNAME`: Nombre de usuario de DockerHub de la persona realizando el laboratorio
-
-6. Utilizando la dirección obtenida en el paso anterior descargar el repositorio localmente:
-
-   ```sh
-   git clone git@github.com:xoanmm/test-app-argocd-src.git ~/test-app-argocd-src
-   ```
-
-7. Copiar el contenido de la carpeta `test-app-argocd-src` al directorio donde se ha descargado el repositorio:
-
-   ```sh
-   cp -r test-app-argocd-src/. ~/test-app-argocd-src
-   ```
 
 8. Abrir una terminal en el directorio `~/test-app-argocd-src` y subir todos los nuevos cambios al repositorio:
 
