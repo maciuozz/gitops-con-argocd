@@ -1,0 +1,26 @@
+redis-ha:
+  enabled: false
+
+controller:
+  replicas: 1
+
+server:
+  autoscaling:
+    enabled: true
+    minReplicas: 2
+
+repoServer:
+  autoscaling:
+    enabled: true
+    minReplicas: 2
+
+applicationSet:
+  replicaCount: 2
+
+configs:
+  repositories:
+    test-argocd-app:
+      url: git@github.com:maciuozz/kcfp-argocd-app
+      name: kcfp-argocd-app
+  cm:
+    exec.enabled: true

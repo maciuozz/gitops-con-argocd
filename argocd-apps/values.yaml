@@ -1,0 +1,93 @@
+# -- Deploy Argo CD Applications within this helm release
+# @default -- `[]` (See [values.yaml])
+## Ref: https://github.com/argoproj/argo-cd/blob/master/docs/operator-manual/
+applications:
+# argocd-image-updater app
+- name: argocd-image-updater
+  namespace: argocd
+  finalizers:
+  - resources-finalizer.argocd.argoproj.io
+  project: default
+  source:
+    chart: argocd-image-updater
+    repoURL: https://argoproj.github.io/argo-helm
+    targetRevision: 0.9.0
+    helm:
+      releaseName: argocd-image-updater
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: argocd
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+    - CreateNamespace=true
+  additionalAnnotations:
+    argocd.argoproj.io/sync-wave: "1"
+
+# test-app
+- name: kcfp-argocd-app
+  namespace: argocd
+  finalizers:
+  - resources-finalizer.argocd.argoproj.io
+  project: default
+  source:
+    helm:
+      releaseName: my-app
+      valueFiles:
+        - values.yaml
+    path: helm
+    repoURL: git@github.com:maciuozz/kcfp-argocd-app.git
+    targetRevision: main
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: fast-api
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+    - CreateNamespace=true
+  ignoreDifferences:
+  - group: apps
+    kind: Deployment
+    jsonPointers:
+    - /spec/replicas
+  additionalAnnotations:
+    argocd-image-updater.argoproj.io/write-back-method: git:secret:argocd/argocd-repo-creds-test-app-creds
+    argocd-image-updater.argoproj.io/main.update-strategy: semver
+    argocd-image-updater.argoproj.io/main.helm.image-name: image.repository
+    argocd-image-updater.argoproj.io/main.helm.image-tag: image.tag
+    argocd-image-updater.argoproj.io/main.force-update: 'true'
+    argocd-image-updater.argoproj.io/git-branch: main
+    argocd-image-updater.argoproj.io/image-list: >-
+      main=maciuozz/kc7fp-cicd-argocd
+    argocd-image-updater.argoproj.io/main.pull-secret: >-
+      pullsecret:fast-api/reg-cred-argocd-image-updater
+
+- name: sealed-secrets
+  namespace: argocd
+  finalizers:
+  - resources-finalizer.argocd.argoproj.io
+  project: default
+  source:
+    chart: sealed-secrets
+    repoURL: https://bitnami-labs.github.io/sealed-secrets
+    targetRevision: 2.9.0
+    helm:
+      releaseName: sealed-secrets
+      parameters:
+      - name: "secretName"
+        value: "sealed-secrets-key"
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: secrets
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+    - CreateNamespace=true
+  additionalAnnotations:
+    argocd.argoproj.io/sync-wave: "0"

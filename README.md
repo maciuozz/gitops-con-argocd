@@ -1,0 +1,818 @@
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+**Table of Contents**
+
+- [GitOps con ArgoCD](#gitops-con-argocd)
+  - [Software necesario](#software-necesario)
+  - [Escenarios](#escenarios)
+    - [Escenario 1: Aplicación con repositorio para código y otro para GitOps sin Secrets con actualización manual](#escenario-1-aplicaci%C3%B3n-con-repositorio-para-c%C3%B3digo-y-otro-para-gitops-sin-secrets-con-actualizaci%C3%B3n-manual)
+      - [Creación y configuración repositorio de código aplicación](#creaci%C3%B3n-y-configuraci%C3%B3n-repositorio-de-c%C3%B3digo-aplicaci%C3%B3n)
+      - [Creación y configuración repositorio para aplicación ArgoCD](#creaci%C3%B3n-y-configuraci%C3%B3n-repositorio-para-aplicaci%C3%B3n-argocd)
+      - [Despliegue y configuración ArgoCD con repositorio GitOps](#despliegue-y-configuraci%C3%B3n-argocd-con-repositorio-gitops)
+      - [Actualización código y despliegue de forma manual](#actualizaci%C3%B3n-c%C3%B3digo-y-despliegue-de-forma-manual)
+    - [Escenario 2: Aplicación con repositorio para código y otro para GitOps sin Secrets con actualización automática](#escenario-2-aplicaci%C3%B3n-con-repositorio-para-c%C3%B3digo-y-otro-para-gitops-sin-secrets-con-actualizaci%C3%B3n-autom%C3%A1tica)
+      - [Despliegue y configuración argocd-image-updater](#despliegue-y-configuraci%C3%B3n-argocd-image-updater)
+      - [Modificación código y despliegue automático mediante argocd-image-updater](#modificaci%C3%B3n-c%C3%B3digo-y-despliegue-autom%C3%A1tico-mediante-argocd-image-updater)
+    - [Escenario 3: Aplicación con repositorio para código y otro para GitOps con Secrets con actualización automática](#escenario-3-aplicaci%C3%B3n-con-repositorio-para-c%C3%B3digo-y-otro-para-gitops-con-secrets-con-actualizaci%C3%B3n-autom%C3%A1tica)
+      - [Configuración de sealed secrets y utilización en repositorio aplicación ArgoCD](#configuraci%C3%B3n-de-sealed-secrets-y-utilizaci%C3%B3n-en-repositorio-aplicaci%C3%B3n-argocd)
+      - [Configuración de notificaciones en ArgoCD y commit status](#configuraci%C3%B3n-de-notificaciones-en-argocd-y-commit-status)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
+# GitOps con ArgoCD
+
+## Software necesario
+
+- [docker](https://docs.docker.com/engine/install/)
+- [minikube](https://minikube.sigs.k8s.io/docs/start/)
+- [kubectl](https://kubernetes.io/docs/tasks/tools/)
+- [helm](https://helm.sh/docs/intro/install/)
+- [kubeseal](https://github.com/bitnami-labs/sealed-secrets#kubeseal)
+
+## Escenarios
+
+Se van a plantear diferentes escenarios incrementales en el que se utilizarán las metodologías GitOps y ArgoCD como herramienta de CD utilizando GitOps.
+
+### Escenario 1: Aplicación con repositorio para código y otro para GitOps sin Secrets con actualización manual
+
+#### Creación y configuración repositorio de código aplicación
+
+1. Acceder a [GitHub](https://github.com) y hacer click en el botón de la esquina superior izquierda de nombre **New**, para crear un nuevo repositorio, tal y como se muestra en la siguiente imagen.
+
+    ![Select create app argocd](./img/select_create_app_argocd.png)
+
+2. Crear un repositorio en GitHub, **dentro de la cuenta de usuario utilizada**, para una aplicación que utilice el lenguaje Python, rellenando los datos de la siguiente forma:
+
+    - **Repository name**: `test-app-argocd-src`
+    - **Description**: `App source coud that use GitHub Actions for CI and ArgoCD for CD`
+    - Marcar opción **Private**
+    - Marcar opción **Add a README file**
+
+    Debería quedar algo como lo mostrado en la siguiente captura.
+
+    ![Create GitHub repo app python jenkin](./img/create_repo_argocd_app_src.png)
+
+    Hacer click sobre el botón **Create repository**, señalado en la imagen mediante un rectángulo rojo.
+
+3. Se accederá al repositorio creado, viéndose algo como lo mostrado en la siguiente captura.
+
+    ![Repository ArgoCD App Src Created](./img/repo_argocd_app_src_created.png)
+
+4. Hacer click sobre la acción **<> Code**, señalada en la imagen anterior mediante un rectángulo rojo. Copiar la dirección que muestra esta opción para descargar el repositorio localmente.
+
+5. Es necesario configurar una serie de `secrets` en el repositorio para utilizar en los github actions:
+
+   - `DOCKERHUB_TOKEN`: Token obtenido en el proceso [Creación de cuenta en DockerHub y obtención de token](../1-pipelines-github-workflows-jenkins/README.md#creación-de-cuenta-en-dockerhub-y-obtención-de-token) del laboratorio anterior
+   - `DOCKERHUB_USERNAME`: Nombre de usuario de DockerHub de la persona realizando el laboratorio
+
+6. Utilizando la dirección obtenida en el paso anterior descargar el repositorio localmente:
+
+   ```sh
+   git clone git@github.com:xoanmm/test-app-argocd-src.git ~/test-app-argocd-src
+   ```
+
+7. Copiar el contenido de la carpeta `test-app-argocd-src` al directorio donde se ha descargado el repositorio:
+
+   ```sh
+   cp -r test-app-argocd-src/. ~/test-app-argocd-src
+   ```
+
+8. Abrir una terminal en el directorio `~/test-app-argocd-src` y subir todos los nuevos cambios al repositorio:
+
+   ```sh
+   git add .
+   git commit -m "fix: add initial version"
+   git push
+   ```
+
+9. Si se accede a la web de GitHub para el repositorio se podrá comprobar como se han lanzado los workflows configurados en la carpeta `.github/workflows`, que se encargarán de crear una imagen nueva para el repositorio Docker a través del workflow `release-build`. Se debería ver algo como lo mostrado en la siguiente captura.
+
+   ![ArgoCD App src github workflows created Docker image](./img/argocd_app_src_github_workflows_created_docker_image.png)
+
+#### Creación y configuración repositorio para aplicación ArgoCD
+
+1. Acceder a [GitHub](https://github.com) y hacer click en el botón de la esquina superior izquierda de nombre **New**, para crear un nuevo repositorio, tal y como se muestra en la siguiente imagen.
+
+    ![Select create app argocd](./img/select_create_app_argocd.png)
+
+2. Crear un repositorio en GitHub, **dentro de la cuenta de usuario utilizada**, para una aplicación que utilice el lenguaje Python, rellenando los datos de la siguiente forma:
+
+    - **Repository name**: `test-argocd-app`
+    - **Description**: `Repository to store argocd app deployment manifests using helm`
+    - Marcar opción **Private**
+    - Marcar opción **Add a README file**
+
+    Una vez rellenados los datos, hacer click sobre el botón **Create repository**.
+
+3. Al finalizar se redigirá al repositorio creado, debería verse algo como lo mostrado en la siguiente captura.
+
+    ![Repository ArgoCD App Created](./img/repo_argocd_app_created.png)
+
+4. Configurar una [deploy key](https://docs.github.com/es/authentication/connecting-to-github-with-ssh/managing-deploy-keys) para el repositorio, para ello será necesario realizar los siguientes pasos:
+
+     1. Crear la deploy key abriendo una terminal y ejecutar el comando:
+
+        ```sh
+        ssh-keygen -t ed25519 -f $HOME/.ssh/argocd_app_kc
+        ```
+
+        > Pulsar el botón Enter en todos las preguntas requeridas
+
+     2. La salida del comando anterior debería ser algo como lo siguiente:
+
+        ```sh
+        Generating public/private ed25519 key pair.
+        Enter passphrase (empty for no passphrase):
+        Enter same passphrase again:
+        Your identification has been saved in /home/xoanmm/.ssh/argocd_app_kc
+        Your public key has been saved in /home/xoanmm/.ssh/argocd_app_kc.pub
+        The key fingerprint is:
+        SHA256:r2sYrWJHACkGuetHm5rf+hXuoQDXk3L2/JMCw4tZWVU xoanmm@xoanmm-NBLB-WAX9N
+        The key's randomart image is:
+        +--[ED25519 256]--+
+        |o. .      .E     |
+        |o.o      .       |
+        |.o .    .        |
+        |.   o ..         |
+        | o o.BooS        |
+        |. o.+*B o.       |
+        |. ..*.+X  o      |
+        | ..*=.B.++       |
+        | o++o* o+o.      |
+        +----[SHA256]-----+
+        ```
+
+     3. Acceder al repositorio en la web y pulsar sobre la sección **Settings**, tal y como se señala en la siguiente captura mediante un rectángulo rojo.
+
+        ![ArgoCD App repo access settings](./img/argocd_app_repo_access_settings.png)
+
+     4. Hacer click en la sección **Deploy keys** del menú lateral derecho, señalado mediante un rectángulo rojo en la siguiente imagen.
+
+        ![ArgoCD App repo access settings select deploy keys](./img/argocd_app_repo_access_settings_select_deploy_keys.png)
+
+     5. Seleccionar la opción **Add deploy keys** para añadir una nueva imagen, esto se puede ver claramente en la siguiente captura, donde se ha señalado mediante un rectángulo rojo la opción mencionada.
+
+        ![ArgoCD App repo access settings select add deploy keys](./img/argocd_app_repo_access_settings_select_add_deploy_keys.png)
+
+     6. Recuperar la clave pública de la deploy key creada anteriormente, ejecutando el siguiente comando en una terminal:
+
+        ```sh
+        cat ~/.ssh/argocd_app_kc.pub
+        ```
+
+     7. La salida del comando anterior debería ser algo como lo siguiente:
+
+        ```sh
+        ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIFH/gjkpiLeOuxP1L7Yn67F8O++91X/5WMbSFC8O9pWi xoanmm@xoanmm-NBLB-WAX9N
+        ```
+
+     8. Copiar el contenido del comando anterior y utilizar para rellenar la sección `Key` en el proceso de añadir una nueva deploy key, quedando algo como lo mostrado en la siguiente captura.
+
+        ![ArgoCD app configure deploy key](./img/argocd_app_configure_deploy_key.png)
+
+5. Acceder al repositorio desde la Web de GitHub y hacer click en la sección **<> Code**, copiar el valor obtenido para descargar localmente el repositorio.
+
+6. Utilizar el valor obtenido en el paso anterior para descargar localmente el repositorio en la carpeta `~/test-argocd-app`:
+
+    ```sh
+    git clone git@github.com:xoanmm/test-argocd-app.git ~/test-argocd-app
+    ```
+
+7. Copiar el contenido de la carpeta `test-argocd-app` en el repositorio descargado en `~/test-argocd-app`:
+
+    ```sh
+    cp -r test-argocd-app/. ~/test-argocd-app
+    ```
+
+8. Actualizar el repositorio docker de la imagen creada por el alumno fichero `~/test-argocd-app/helm/values.yaml` en la sección `image.repository`:
+
+    ```sh
+    image:
+      repository: <repositorio_imagen_alumno>
+    ```
+
+9. Subir los cambios realizados para el repositorio `test-argocd-app`, abriendo una terminal en la carpeta `~/test-argocd-app` y ejecutar los siguientes comandos:
+
+    ```sh
+    git add .
+    git commit -m "fix: add initial version"
+    git push
+    ```
+
+#### Despliegue y configuración ArgoCD con repositorio GitOps
+
+1. Añadir el repositorio helm de argocd:
+
+    ```sh
+    helm repo add argo https://argoproj.github.io/argo-helm
+    helm repo update
+    ```
+
+2. Recuperar la deploy key privada generada en la sección [Creación y configuración repositorio para aplicación ArgoCD](#creación-y-configuración-repositorio-para-aplicación-argocd):
+
+    ```sh
+    cat ~/.ssh/argocd_app_kc
+    ```
+
+3. Utilizar el valor obtenido en el paso anterior para configurar un nuevo fichero `argocd/values-secret.yaml` tal y como se muestra a continuación para completar la sección `sshPrivateKey`:
+
+    ```yaml
+    configs:
+      credentialTemplates:
+        test-app-creds:
+          url: git@github.com:<github_username>/kcfp-argocd-app
+          sshPrivateKey:
+            <private_deploy_key>
+    ```
+
+4. Crear un cluster en GKE con la opción ***regional*** para que haya alta disponibilidad, tolerancia a fallos y mejor rendimiento. 
+   Marcar ***Enable cluster autoscaler***.
+   Si echamos un vistazo al namespace ***kube-system*** vemos la siguiente salida: 
+   
+       16:53 @/Users/paoloscotto/desktop/gitops-con-argocd ~ $ kubectl get po -n kube-system
+       NAME                                                             READY   STATUS    RESTARTS   AGE
+       event-exporter-gke-755c4b4d97-d88sj                              2/2     Running   0          134m
+       fluentbit-gke-dmhb8                                              2/2     Running   0          133m
+       gke-metrics-agent-dt5z2                                          2/2     Running   0          133m
+       konnectivity-agent-74fc8ddbc-bm6f8                               1/1     Running   0          132m
+       kube-dns-5b5dfcd97b-dvtqn                                        4/4     Running   0          134m
+       kube-dns-autoscaler-5f56f8997c-wxjh9                             1/1     Running   0          134m
+       kube-proxy-gke-cluster-kcfp-ci-cd-a-default-pool-57bd9d51-52kw   1/1     Running   0          133m
+       metrics-server-v0.5.2-67864775dc-dcmvk                           2/2     Running   0          132m
+       pdcsi-node-f2psl                                                 2/2     Running   0          133m
+   
+5. Hacer click en el nombre del cluster y luego en "CONNECT". Se abrirá una ventana donde copiamos
+   el comando y lo ejecutamos en nuestra consola para conectarnos al cluster. Ejecutamos este comando para obtener permisos 
+   de administrador del cluster:
+
+       kubectl create clusterrolebinding cluster-admin-binding --clusterrole cluster-admin --user $(gcloud config get-value account)  
+
+5. Para instalar Nginx Ingress Controller en GCP-GKE ejecutar:
+
+       kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v1.6.4/deploy/static/provider/cloud/deploy.yaml
+
+6. Añadir el repositorio de helm prometheus-community para poder desplegar el chart kube-prometheus-stack:
+
+       helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+       helm repo update
+
+7. Desplegar el chart kube-prometheus-stack del repositorio de helm añadido en el paso anterior con los valores configurados en el archivo  
+   kube-prometheus-stack/values.yaml en el namespace fast-api:
+
+       helm -n fast-api upgrade --install prometheus prometheus-community/kube-prometheus-stack -f kube-prometheus-stack/values.yaml --create-namespace --wait --version 34.1.1
+
+8. Desplegar el helm chart de argocd utilizando el fichero `argocd/values.yaml` y el fichero `argocd/values-secret.yaml` creado en los pasos 
+   anteriores:
+
+    ```sh
+    helm -n argocd upgrade --install argocd argo/argo-cd \
+      -f argocd/values.yaml \
+      -f argocd/values-secret.yaml \
+      --create-namespace \
+      --wait --version 5.34.1
+    ``` 
+
+9. Realizar un port-forward al servicio de argocd al puerto 8080 local:
+
+       kubectl port-forward service/argocd-server -n argocd 8080:443
+
+10. Obtener la contraseña de acceso a argocd mediante el siguiente comando:
+
+        kubectl -n argocd get secret argocd-initial-admin-secret \
+        -o jsonpath="{.data.password}" | base64 -d
+
+11. Acceder a la url http://localhost:8080 y utilizar como credenciales el nombre de usuario admin y la contraseña obtenida en
+    el paso anterior.
+
+### Escenario 3: Aplicación con repositorio para código y otro para GitOps con Secrets con actualización automática
+
+#### Configuración de sealed secrets y utilización en repositorio aplicación ArgoCD
+
+1. Se desplegará la aplicación [sealed secrets](https://github.com/bitnami-labs/sealed-secrets), para ello se desplegará como una aplicación de ArgoCD añadiendola en la lista de `argocd-apps`, para ello utilizar el nuevo fichero `argocd-apps/values_v4.yaml` donde el cambio más relevante es el siguiente:
+
+    ```yaml
+   - name: sealed-secrets
+     namespace: argocd
+     finalizers:
+     - resources-finalizer.argocd.argoproj.io
+     project: default
+     source:
+       chart: sealed-secrets
+       repoURL: https://bitnami-labs.github.io/sealed-secrets
+       targetRevision: 2.9.0
+       helm:
+         releaseName: sealed-secrets
+         parameters:
+         - name: "secretName"
+           value: "sealed-secrets-key"
+     destination:
+       server: https://kubernetes.default.svc
+       namespace: secrets
+     syncPolicy:
+       automated:
+         prune: true
+         selfHeal: true
+       syncOptions:
+       - CreateNamespace=true
+     additionalAnnotations:
+       argocd.argoproj.io/sync-wave: "0"
+    ```
+
+2. Pero antes es necesario realizar una serie de pasos para preconfigurar la clave de encriptación:
+
+    1. Declarar las variables necesarias:
+
+        ```sh
+        export PRIVATEKEY="mytls.key"
+        export PUBLICKEY="mytls.crt"
+        export NAMESPACE="secrets"
+        export SECRETNAME="sealed-secrets-key"
+        ```
+
+    2. Generar un nuevo par de claves RSA:
+
+        ```sh
+        openssl req -x509 -days 365 -nodes -newkey rsa:4096 -keyout "$PRIVATEKEY" -out "$PUBLICKEY" -subj "/CN=sealed-secret/O=sealed-secret"
+        ```
+
+    3. Crear el namespace donde se va a desplegar sealed-secrets:
+
+        ```sh
+        kubectl create namespace $NAMESPACE
+        ```
+
+    4. Crear un `Secret` de tipo tls, utilizando el par de claves RSA creado anteriormente:
+
+        ```sh
+        kubectl -n "$NAMESPACE" create secret tls \
+          "$SECRETNAME" --cert="$PUBLICKEY" \
+          --key="$PRIVATEKEY"
+        kubectl -n "$NAMESPACE" label secret \
+          "$SECRETNAME" \
+          sealedsecrets.bitnami.com/sealed-secrets-key=active
+        ```
+
+3. Desplegar `argocd-apps` con la nueva versión utilizando el fichero `argocd-apps/values_v4.yaml`:
+
+    ```sh
+    helm -n argocd upgrade --install argocd-apps argo/argocd-apps \
+      -f argocd-apps/values-sealed-secrets.yaml \
+      --create-namespace --wait --version 1.1.0
+    ```
+
+4. Comprobar en ArgoCD, accediendo a la URL https://localhost:8080, como se dispone de una nueva aplicación llamada `sealed-secrets`, tal y  
+   como se muestra en la siguiente captura:
+
+    ![sealed secrets deployed](./img/sealed_secrets_deployed.png)
+
+5. Crear un nuevo Secret utilizando kubeseal para acceder al repositorio creado en DockerHub, será necesario recuperar el token creado en el laboratorio anterior en la sección [Creación de cuenta en DockerHub y obtención de token](../1-pipelines-github-workflows-jenkins/README.md#creación-de-cuenta-en-dockerhub-y-obtención-de-token)
+
+    ```sh
+    kubectl create secret docker-registry registry-credential \
+    --docker-server="https://index.docker.io/v1/" \
+    --docker-username="<dockerhub_username>" \
+    --docker-password="<dockerhub_token>" \
+    --dry-run=client \
+    -n fast-api \
+    -o yaml > simple_secret.yaml
+
+    cat simple_secret.yaml | kubeseal \
+        --controller-namespace secrets \
+        --controller-name sealed-secrets \
+        --format yaml \
+        -n fast-api \
+        > sealed-secret.yaml
+
+    rm simple_secret.yaml
+    ```
+
+6. Mover el fichero creado `sealed-secret.yaml` al repositorio de la aplicación ArgoCD.
+
+    ```sh
+    mv sealed-secret.yaml ~/desktop/kcfp-argocd-app/helm/templates
+    ```
+
+7. Subir el fichero `sealed-secret.yaml` añadiendo al repositorio `test-argocd-app`, abriendo una terminal en la carpet `~/test-argocd-app` y ejecutando los siguientes comandos:
+
+    ```sh
+    git add helm/templates/sealed-secret.yaml
+    git commit -m "fix: add sealed secret"
+    git push
+    ```
+
+8. Acceder a la aplicación en ArgoCD a través de la URL https://localhost:8080/applications/argocd/test-argocd-app?view=tree&resource= y comprobar como se ha creado el secreto utilizando sealed-secrets, tal y como se puede ver en la siguiente captura, donde se señala este mediante un rectángulo rojo.
+
+    ![ArgoCD App Creation Sealed Secret](./img/argocd_app_creation_sealed_secret.png)
+
+9. Acceder al repositorio a través de la web de DockerHub y convertirlo en privado, para ello simplemente basta con hacer click sobre el repositorio en la pestaña **Options**, y una vez dentro en la sección **Visibility Settings** hacer click sobre el botón **Make private**, tal y como se expone en la siguiente captura.
+
+    ![ArgoCD App Make repo private](./img/argocd_app_make_repo_private.png)
+
+    Se pedirá confirmación solicitando que se introduzca el nombre del repositorio, escribir el nombre del repositorio y pulsar sobre el botón **Make private**, tal y como se puede ver en la siguiente imagen.
+
+    ![ArgoCD App Make repo private confirmation](./img/argocd_app_make_repo_private_confirmation.png)
+
+10. Modificar el fichero `~/test-argocd-app/helm/templates/deployment.yaml` de forma que quede de la siguiente forma:
+
+    ```yaml
+    apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+      name: {{ include "fast-api-webapp.fullname" . }}
+      labels:
+        {{- include "fast-api-webapp.labels" . | nindent 4 }}
+    spec:
+      {{- if not .Values.autoscaling.enabled }}
+      replicas: {{ .Values.replicaCount }}
+      {{- end }}
+      selector:
+        matchLabels:
+          {{- include "fast-api-webapp.selectorLabels" . | nindent 6 }}
+      template:
+        metadata:
+          {{- with .Values.podAnnotations }}
+          annotations:
+            {{- toYaml . | nindent 8 }}
+          {{- end }}
+          labels:
+            {{- include "fast-api-webapp.selectorLabels" . | nindent 8 }}
+        spec:
+          {{- with .Values.imagePullSecrets }}
+          imagePullSecrets:
+            {{- toYaml . | nindent 8 }}
+          {{- end }}
+          serviceAccountName: {{ include "fast-api-webapp.serviceAccountName" . }}
+          securityContext:
+            {{- toYaml .Values.podSecurityContext | nindent 8 }}
+          containers:
+            - name: {{ .Chart.Name }}
+              securityContext:
+                {{- toYaml .Values.securityContext | nindent 12 }}
+              image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+              imagePullPolicy: {{ .Values.image.pullPolicy }}
+              ports:
+                - name: http
+                  containerPort: {{ .Values.service.port }}
+                  protocol: TCP
+              livenessProbe:
+                httpGet:
+                  path: /health
+                  port: http
+              readinessProbe:
+                httpGet:
+                  path: /health
+                  port: http
+              resources:
+                {{- toYaml .Values.resources | nindent 12 }}
+          {{- with .Values.nodeSelector }}
+          nodeSelector:
+            {{- toYaml . | nindent 8 }}
+          {{- end }}
+          {{- with .Values.affinity }}
+          affinity:
+            {{- toYaml . | nindent 8 }}
+          {{- end }}
+          {{- with .Values.tolerations }}
+          tolerations:
+            {{- toYaml . | nindent 8 }}
+          {{- end }}
+    ```
+
+11. Modificar el fichero `~/test-argocd-app/helm/values.yaml` en la sección `imagePullSecrets` para que quede de la siguiente forma:
+
+    ```yaml
+    imagePullSecrets:
+      - name: registry-credential
+    ```
+
+12. Crear un nuevo secret usando sealed-secrets para el acceso al registry con la URL del API necesaria por argocd-image-updater:
+
+    ```sh
+    kubectl create secret docker-registry reg-cred-argocd-image-updater \
+    --docker-server="https://registry-1.docker.io/" \
+    --docker-username="<dockerhub_username>" \
+    --docker-password="<dockerhub_token>" \
+    --dry-run=client \
+    -n fast-api \
+    -o yaml > reg_cred.yaml
+
+    cat reg_cred.yaml | kubeseal \
+        --controller-namespace secrets \
+        --controller-name sealed-secrets \
+        --format yaml \
+        -n fast-api \
+        > sealed-secret-reg-cred.yaml
+    
+    rm reg_cred.yaml
+    ```
+
+13. Mover el fichero creado `sealed-secret-reg-cred.yaml` al repositorio `test-argocd-app`:
+
+    ```sh
+    mv sealed-secret-reg-cred.yaml ~/desktop/kcfp-argocd-app/helm/templates
+    ```
+
+14. Añadir el fichero `~/test-argocd-app/helm/templates/rbac-argocd-image-updater.yaml` con el siguiente contenido:
+
+    ```yaml
+    apiVersion: rbac.authorization.k8s.io/v1
+    kind: ClusterRole
+    metadata:
+      name: argocd-image-updater-secrets
+      labels:
+        {{- include "fast-api-webapp.labels" . | nindent 4 }}
+    rules:
+    - apiGroups: ["*"]
+      resources: ["secrets"]
+      verbs: ["*"]
+    ---
+    apiVersion: rbac.authorization.k8s.io/v1
+    kind: ClusterRoleBinding
+    metadata:
+      name: argocd-image-updater-secrets
+      labels:
+        {{- include "fast-api-webapp.labels" . | nindent 4 }}
+    roleRef:
+      apiGroup: rbac.authorization.k8s.io
+      kind: ClusterRole
+      name: argocd-image-updater-secrets
+    subjects:
+    - kind: ServiceAccount
+      name: argocd-image-updater
+      namespace: argocd
+    ```
+
+    > Es necesario para que argocd-image-updater pueda acceder al secret creado para acceder al registry privado de la imagen docker
+
+15. Subir el contenido modificado en la carpeta `~/test-argocd-app` ejecutando los siguientes comandos sobre una terminal en dicha carpeta:
+
+    ```sh
+    git add .
+    git commit -m "fix: added imagePullSecrets configuration"
+    git push
+    ```
+
+16. Realizar cambios en el código de la aplicación, para así generar una nueva versión y comprobar que se puede acceder al código del repositorio Docker utilizando el secreto creado anteriormente. Para ello es necesario modificar el fichero `~/test-app-argocd-src/src/application/app.py` de forma que quede tal y como se muestra a continuación:
+
+    ```python
+    """
+    Module for define API endpoints
+    """
+
+    import uvicorn
+    from fastapi import FastAPI
+
+
+    app = FastAPI(
+        port=8081
+    )
+
+    root_endpoint_message = {"message": "Hello world will be updated automatically in private repository"}
+    health_message = {"health": "ok"}
+
+    """
+    Root endpoint definition
+    """
+    @app.get("/")
+    async def root():
+        """Result of calling the root endpoint
+        Returns
+        -------
+        'Hello world' message
+        """
+        return root_endpoint_message
+
+    @app.get("/health")
+    async def health():
+        """Result of calling /health endpoint
+        Returns
+        -------
+        JSON message with health status
+        """
+        return health_message
+
+    if __name__ == "__main__":
+        uvicorn.run(app, host="0.0.0.0", port=8081)
+    ```
+
+17. Para hacer pre-commit:
+
+         pip3 install pre-commit
+         pip3 install pre-commit
+         pre-commit install
+         python3 -m venv venv
+         source venv/bin/activate
+         pip3 install -r src/requirements.txt
+         pre-commit run -a
+
+17. Subir los cambios del repositorio, abriendo una terminal sobre el directorio `~/test-app-argocd-src` y ejecutando los siguientes comandos:
+
+    ```sh
+    git add .
+    git commit -m "fix: changed root entrypoint message"
+    git push
+    ```
+
+18. Será necesario indicarle a argocd-image-updater las credenciales para acceder al registry de la imagen, para ello es necesario añadir la anotación `argocd-image-updater.argoproj.io/main.pull-secret: reg-cred-argocd-image-updater` en la aplicación de ArgoCD, para ello se desplegará la nueva versión de argocd-apps a través del fichero `argocd-apps/values_v5.yaml`:
+
+    ```sh
+    helm -n argocd upgrade --install argocd-apps argo/argocd-apps \
+      -f argocd-apps/values.yaml \
+      --create-namespace --wait --version 1.1.0
+    ```
+
+14. Usar la Ip externa del servicio 'ingress-nginx-controller' de tipo 'LoadBalancer' para conectarse a la aplicación:
+
+        kubectl get svc -n ingress-nginx
+
+20. Realizar una petición al endpoint `/` usando la Ip obtenida en el paso anterior y comprobar la respuesta recibida:
+
+    ```sh
+    curl -X 'GET' \
+    'http://34.27.234.146/' \
+    -H 'accept: application/json'
+    ```
+
+    La respuesta obtenida debería ser la siguiente:
+
+    ```sh
+    {"message":"Hello world will be updated automatically in private repository"}
+    ```
+
+21. Comprobar como se ha cambiado la imagen utilizada para el Deployment `my-app-fast-api-webapp` desplegado en el namespace `fast-api` por la nueva imagen con la nueva versión:
+
+    ```sh
+    kubectl -n fast-api get deployment my-app-fast-api-webapp -o=jsonpath='{$.spec.template.spec.containers[:1].image}' | cut -d ':' -f2
+    ```
+
+22. Para ver la salida de las métricas de Prometheus expuestas por la aplicación ejecutamos:
+
+        kubectl -n monitoring port-forward service/my-release-simple-server 8000:8000
+
+23. Abriendo http://localhost:8000/ vemos:
+
+        # HELP main_requests_total Total number of requests to main endpoint
+        # TYPE main_requests_total counter
+        main_requests_total 5.0
+        # HELP students_create_total Total number of requests to the endpoint for create a student
+        # TYPE students_create_total counter
+        students_create_total 4.0
+        # HELP joke_requests_total Total number of requests to joke endpoint
+        # TYPE joke_requests_total counter
+        joke_requests_total 4.0
+        # HELP healthcheck_requests_total Total number of requests to healthcheck
+        # TYPE healthcheck_requests_total counter
+        healthcheck_requests_total 574.0
+
+24. Abrir una nueva pestaña en la terminal y realizar un port-forward del puerto http-web del servicio de Grafana 
+    al puerto 3000 de la máquina:
+
+        kubectl -n monitoring port-forward svc/prometheus-grafana 3000:http-web
+
+25. Acceder a la dirección http://localhost:3000. Las credenciales de Grafana por defecto son admin para el usuario y prom-operator para la  
+    contraseña. Hacemos un import del fichero custom_dashboard.json, seleccionamos el namespace monitoring y uno de los pods de la aplicación FastAPI. Se pueden observar 7 paneles:
+
+    - 4 paneles dedicados a los endpoints, los cuales registran el número de llamadas recibidas por cada uno de ellos.
+    - 1 panel que cuenta el número de veces que la aplicación ha sido iniciada.
+    - 1 panel que muestra el número total de llamadas realizadas.
+    - 1 panel que muestra el uso actual de CPU en comparación con la cantidad máxima solicitada.
+
+Cambiar el json y poner foto...
+
+#### Configuración de notificaciones en ArgoCD y commit status
+
+1. En el laboratorio anterior se creó un aplicación en GitHub en la sección [Creación de app en GitHub para utilizar con Jenkins](../1-pipelines-github-workflows-jenkins/README.md#creación-de-app-en-github-para-utilizar-con-jenkins). Acceder a la información de la aplicación instalada desde la sección **Developer settings** dentro de la sección **Settings**, tal y como se muestra en la siguiente imagen.
+
+    ![Access developer settings](./img/access_developer_settings.png)
+
+    Seleccionar la aplicación Jenkins, y hacer click en la sección **Edit**, tal y como se señala en la imagen anterior un rectángulo rojo.
+
+2. Se accederá a la información detallada de la aplicación, tal y como se puede ver en la siguiente captura.
+    ![Access Jenkins app installed](./img/access_jenkins_app_installed.png)
+
+    Hacer click en la opción **Install App**, señalada en la imagen anterior mediante un rectángulo rojo.
+
+3. En la cuenta donde se ha instalado hacer click sobre el botón de la rueda dentada, tal y como se expone en la siguiente imagen.
+
+    ![Access Jenkins app installed detailed](./img/access_jenkins_app_installed_detailed.png)
+
+4. En la URL del navegador obtener la última parte de la URL, ya que estos son el installationID de la aplicación.
+
+5. Hacer click en la sección **App Settings**, y se accederá a los detalles de la aplicación y ajustes de la misma, tal y como se puede ver en la siguiente captura.
+
+    ![Access Jenkins app installed settings](./img/access_jenkins_app_installed_settings.png)
+
+    Anotar el nombre de **App ID**, señalado en la imagen anterior mediante un rectángulo rojo.
+
+6. Hacer click en la sección **Private keys** sobre el botón **Generate a private key**, tal y como se muestra en la siguiente captura, donde se ha señalado el botón mediante un rectángulo rojo.
+
+    ![Generate app private key](./img/generate_app_private_key.png)
+
+7. Modificar el fichero `argocd/values-notifications.yaml` utilizando el `installationID` y `App ID` de la aplicación obtenidos en los pasos anteriores:
+
+    ```yaml
+    notifications:
+      argocdUrl: "https://argocd.example.com"
+      notifiers:
+        service.github: |
+          appID: <appID>
+          installationID: <appInstallionID>
+          privateKey: $github-privateKey
+    ```
+
+8. Modificar el fichero `argocd/values-secret.yaml` añadiendo el contenido de la private key descargada en los pasos anteriores en la siguiente sección:
+
+    ```yaml
+    notifications:
+    secret:
+      items:
+        github-privateKey: |
+          <app_private_key>
+    ```
+
+9. Desplegar argocd con los nuevos valores configurados:
+
+    ```sh
+    helm -n argocd upgrade --install argocd argo/argo-cd \
+      -f argocd/values.yaml \
+      -f argocd/values-secret.yaml \
+      -f argocd/values-notifications.yaml \
+      --create-namespace --wait --version 5.34.4
+    ```
+
+10. Es necesario añadir una serie de anotaciones a la aplicación de ArgoCD para que se subscriba a los cambios y notifique de ellos, para ello es necesario desplegar de nuevo la aplicación `test-argocd-app` utilizando los valores configurados en `argocd-apps/values_v6.yaml` donde los cambios más relevantes están en la definición de la aplicación `test-argocd-app`:
+
+    ```yaml
+    # test-app
+    - name: test-argocd-app
+      namespace: argocd
+      finalizers:
+      - resources-finalizer.argocd.argoproj.io
+      project: default
+      source:
+        helm:
+          releaseName: my-app
+          valueFiles:
+            - values.yaml
+        path: helm
+        repoURL: git@github.com:xoanmm/test-argocd-app.git
+        targetRevision: main
+      destination:
+        server: https://kubernetes.default.svc
+        namespace: fast-api
+      syncPolicy:
+        automated:
+          prune: true
+          selfHeal: true
+        syncOptions:
+        - CreateNamespace=true
+      ignoreDifferences:
+      - group: apps
+        kind: Deployment
+        jsonPointers:
+        - /spec/replicas
+      additionalAnnotations:
+        argocd-image-updater.argoproj.io/write-back-method: git:secret:argocd/argocd-repo-creds-test-argocd-app
+        argocd-image-updater.argoproj.io/main.update-strategy: semver
+        argocd-image-updater.argoproj.io/main.helm.image-name: image.repository
+        argocd-image-updater.argoproj.io/main.helm.image-tag: image.tag
+        argocd-image-updater.argoproj.io/main.force-update: 'true'
+        argocd-image-updater.argoproj.io/git-branch: main
+        argocd-image-updater.argoproj.io/image-list: >-
+          main=xoanmallon/test-argocd-app
+        argocd-image-updater.argoproj.io/main.pull-secret: >-
+          pullsecret:fast-api/reg-cred-argocd-image-updater
+            notifications.argoproj.io/subscribe.on-sync-succeeded.github: ''
+        notifications.argoproj.io/subscribe.on-deployed.github: ''
+        notifications.argoproj.io/subscribe.on-sync-failed.github: ''
+        notifications.argoproj.io/subscribe.app-sync-status-unknown.github: ''
+    ```
+
+11. Desplegar de nuevo la aplicación `argocd-apps` utilizando los valores del fichero `argocd-apps/values_v6.yaml`:
+
+    ```sh
+    helm -n argocd upgrade --install argocd-apps argo/argocd-apps \
+      -f argocd-apps/values_v6.yaml \
+      --create-namespace --wait --version 1.1.0
+    ```
+
+12. Acceder a la URL https://localhost:8080/applications/argocd/test-argocd-app?view=tree&conditions=false&resource= y hacer click sobre el botón `Sync`, tal y como se señala en la siguiente imagen mediante un rectangulo rojo.
+
+    ![ArgoCD App Sync](./img/argocd_app_sync.png)
+
+    En las opciones que se mostrarán dejar todo por defecto y hacer click sobre el botón **Synchronize**, señalado en la siguiente captura mediante un rectángulo rojo.
+
+    ![ArgoCD App Synchronize](./img/argocd_app_synchronize.png)
+
+13. Acceder al repositorio en GitHub para la aplicación de ArgoCD de nombre `test-argocd-app` y comprobar como se ha mandado una notificación cambiando el commit status del último commit.
+
+    ![ArgoCD App Synchronize Notification](./img/argocd_app_synchronize_notification.png)
+
+    Si se hace click sobre la misma se puede observar con más detalle la información.
+    ![ArgoCD App Synchronize Notification Detailed](./img/argocd_app_synchronize_notification_detailed.png)
+
+    Haciendo click sobre el botón **Details** señalado mediante un rectángulo rojo en la imagen anterior se accederá a la URL de la aplicación, tal y como se muestra en la siguiente captura.
+
+    ![ArgoCD App Synchronize Notification Detailed View App](./img/argocd_app_synchronize_notification_detailed_view_app.png)
+
+
