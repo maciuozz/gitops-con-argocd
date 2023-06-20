@@ -1,23 +1,4 @@
-<!-- START doctoc generated TOC please keep comment here to allow auto update -->
-<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
-**Table of Contents**
 
-- [GitOps con ArgoCD](#gitops-con-argocd)
-  - [Software necesario](#software-necesario)
-  - [Escenarios](#escenarios)
-    - [Escenario 1: Aplicación con repositorio para código y otro para GitOps sin Secrets con actualización manual](#escenario-1-aplicaci%C3%B3n-con-repositorio-para-c%C3%B3digo-y-otro-para-gitops-sin-secrets-con-actualizaci%C3%B3n-manual)
-      - [Creación y configuración repositorio de código aplicación](#creaci%C3%B3n-y-configuraci%C3%B3n-repositorio-de-c%C3%B3digo-aplicaci%C3%B3n)
-      - [Creación y configuración repositorio para aplicación ArgoCD](#creaci%C3%B3n-y-configuraci%C3%B3n-repositorio-para-aplicaci%C3%B3n-argocd)
-      - [Despliegue y configuración ArgoCD con repositorio GitOps](#despliegue-y-configuraci%C3%B3n-argocd-con-repositorio-gitops)
-      - [Actualización código y despliegue de forma manual](#actualizaci%C3%B3n-c%C3%B3digo-y-despliegue-de-forma-manual)
-    - [Escenario 2: Aplicación con repositorio para código y otro para GitOps sin Secrets con actualización automática](#escenario-2-aplicaci%C3%B3n-con-repositorio-para-c%C3%B3digo-y-otro-para-gitops-sin-secrets-con-actualizaci%C3%B3n-autom%C3%A1tica)
-      - [Despliegue y configuración argocd-image-updater](#despliegue-y-configuraci%C3%B3n-argocd-image-updater)
-      - [Modificación código y despliegue automático mediante argocd-image-updater](#modificaci%C3%B3n-c%C3%B3digo-y-despliegue-autom%C3%A1tico-mediante-argocd-image-updater)
-    - [Escenario 3: Aplicación con repositorio para código y otro para GitOps con Secrets con actualización automática](#escenario-3-aplicaci%C3%B3n-con-repositorio-para-c%C3%B3digo-y-otro-para-gitops-con-secrets-con-actualizaci%C3%B3n-autom%C3%A1tica)
-      - [Configuración de sealed secrets y utilización en repositorio aplicación ArgoCD](#configuraci%C3%B3n-de-sealed-secrets-y-utilizaci%C3%B3n-en-repositorio-aplicaci%C3%B3n-argocd)
-      - [Configuración de notificaciones en ArgoCD y commit status](#configuraci%C3%B3n-de-notificaciones-en-argocd-y-commit-status)
-
-<!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
 # GitOps con ArgoCD
 
