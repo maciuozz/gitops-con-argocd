@@ -48,7 +48,6 @@ Observamos la ejecución de los 7 tests, uno para cada endpoint, con el informe 
     
     ================================================================ 7 passed in 0.99s =================================================================
 
-<img width="1788" alt="Screenshot 2023-06-20 at 21 10 30" src="https://github.com/maciuozz/gitops-con-argocd/assets/118285718/062f47f5-a554-46db-9157-f3315596a473">
 
 <img width="1792" alt="Screenshot 2023-06-20 at 20 25 15" src="https://github.com/maciuozz/gitops-con-argocd/assets/118285718/f54c7a8d-8fc7-41bb-9d00-fa8fb2f2e50a">
 
