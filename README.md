@@ -15,6 +15,39 @@ El segundo repositorio, llamado ***kcfp-argocd-app***, almacena los manifiestos 
 La aplicación se basa principalmente en el material abordado durante la asignatura de SRE. He integrado algunas de las aplicaciones que desarrollé durante las prácticas del bootcamp, agregando también nuevas funcionalidades y elementos. Es una aplicación web FastAPI que consta de 7 endpoints y se conecta a una base de datos de MongoDB.
 Observamos la ejecución de los 7 tests, uno para cada endpoint, con el informe de cobertura de código:
 
+    (venv) 20:22 @/Users/paoloscotto/desktop/kcfp-app-argocd-src/src ~ (git)-[main] $ pytest --cov
+    =============================================================== test session starts ================================================================
+    platform darwin -- Python 3.9.6, pytest-7.1.1, pluggy-1.0.0 -- /Users/paoloscotto/Desktop/kcfp-app-argocd-src/venv/bin/python3
+    cachedir: .pytest_cache
+    rootdir: /Users/paoloscotto/Desktop/kcfp-app-argocd-src/src, configfile: pytest.ini, testpaths: tests/
+    plugins: asyncio-0.18.3, anyio-3.7.0, cov-3.0.0
+    asyncio: mode=auto
+    collected 7 items
+    
+    tests/app_test.py::TestFastAPIApp::read_health_test PASSED                                                                                   [ 14%]
+    tests/app_test.py::TestFastAPIApp::read_main_test PASSED                                                                                     [ 28%]
+    tests/app_test.py::TestFastAPIApp::analyze_text_file_test PASSED                                                                             [ 42%]
+    tests/app_test.py::TestFastAPIApp::create_student_test PASSED                                                                                [ 57%]
+    tests/app_test.py::TestFastAPIApp::joke_endpoint_test PASSED                                                                                 [ 71%]
+    tests/app_test.py::TestFastAPIApp::update_student_test PASSED                                                                                [ 85%]
+    tests/app_test.py::TestFastAPIApp::get_all_students_test PASSED                                                                              [100%]
+    
+    ---------- coverage: platform darwin, python 3.9.6-final-0 -----------
+    Name                      Stmts   Miss Branch BrPart     Cover   Missing
+    ------------------------------------------------------------------------
+    application/__init__.py       0      0      0      0   100.00%
+    application/app.py          147     18     30      7    85.88%   51, 56, 154-157, 163-198, 240, 247, 272, 276, 314, 333
+    config/__init__.py            0      0      0      0   100.00%
+    config/test_config.py         9      0      0      0   100.00%
+    tests/__init__.py             0      0      0      0   100.00%
+    tests/app_test.py            95      0      6      0   100.00%
+    ------------------------------------------------------------------------
+    TOTAL                       251     18     36      7    91.29%
+    
+    Required test coverage of 80.0% reached. Total coverage: 91.29%
+    
+    ================================================================ 7 passed in 0.99s =================================================================
+
 <img width="1788" alt="Screenshot 2023-06-20 at 21 10 30" src="https://github.com/maciuozz/gitops-con-argocd/assets/118285718/062f47f5-a554-46db-9157-f3315596a473">
 
 <img width="1792" alt="Screenshot 2023-06-20 at 20 25 15" src="https://github.com/maciuozz/gitops-con-argocd/assets/118285718/f54c7a8d-8fc7-41bb-9d00-fa8fb2f2e50a">
