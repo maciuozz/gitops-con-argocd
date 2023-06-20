@@ -51,8 +51,9 @@ Observamos la ejecución de los 7 tests, uno para cada endpoint, con el informe 
 
 <img width="1792" alt="Screenshot 2023-06-20 at 20 25 15" src="https://github.com/maciuozz/gitops-con-argocd/assets/118285718/f54c7a8d-8fc7-41bb-9d00-fa8fb2f2e50a">
 
+La fase de Lint se activa en dos eventos, pull request (PR) y push. La fase de Test se activa cuando se completa exitosamente Lint y se utiliza para ejecutar pruebas unitarias en el código fuente. La fase release-build se activa después de que se completa una ejecución exitosa de Test. Automatiza el proceso de liberación y despliegue de software, generando automáticamente una nueva versión y publicando una imagen de Docker actualizada en dos registros diferentes: Docker Hub y GHCR. ***He usado un repositorio privado en mi cuenta personal de GitHub en vez de usar un repositorio dentro de la organización keepcodingclouddevops7***. El fichero release.yaml usa 3 repository secret: GHCR_PAT, DOCKERHUB_TOKEN y DOCKERHUB_USERNAME. Para definir GHCR_PAT generamos un token en Settings --> Developer settings con estos permisos:
 
-
+<img width="1789" alt="Screenshot 2023-06-20 at 23 54 50" src="https://github.com/maciuozz/gitops-con-argocd/assets/118285718/12d2b5a8-0179-46fd-8175-a00e3a1fc545">
 
 1. Acceder a [GitHub](https://github.com) y hacer click en el botón de la esquina superior izquierda de nombre **New**, para crear un nuevo repositorio, tal y como se muestra en la siguiente imagen.
 
