@@ -15,6 +15,8 @@ El segundo repositorio, llamado ***kcfp-argocd-app***, almacena los manifiestos 
 La aplicación se basa principalmente en el material abordado durante la asignatura de SRE. He integrado algunas de las aplicaciones que desarrollé durante las prácticas del bootcamp, agregando también nuevas funcionalidades y elementos. Es una aplicación web FastAPI que consta de 7 endpoints y se conecta a una base de datos de MongoDB.
 Observamos la ejecución de los 7 tests, uno para cada endpoint, con el informe de cobertura de código:
 
+<img width="1788" alt="Screenshot 2023-06-20 at 21 10 30" src="https://github.com/maciuozz/gitops-con-argocd/assets/118285718/062f47f5-a554-46db-9157-f3315596a473">
+
 <img width="1792" alt="Screenshot 2023-06-20 at 20 25 15" src="https://github.com/maciuozz/gitops-con-argocd/assets/118285718/f54c7a8d-8fc7-41bb-9d00-fa8fb2f2e50a">
 
 
