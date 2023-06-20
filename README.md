@@ -63,7 +63,7 @@ Dentro del repositorio ***kcfp-app-argocd-src*** generamos un secret, GHCR_PAT, 
    argocd***, respectivamente.
 2. En Git, en el repositorio ***kcfp-argocd-app***, tenemos que configurar una ***deploy key***. Para ello será necesario realizar los siguientes pasos:
 
-   1. Crear la deploy key abriendo una terminal y ejecutar el comando:
+- Crear la deploy key abriendo una terminal y ejecutar el comando:
    
      ```sh
      ssh-keygen -t ed25519 -f $HOME/.ssh/argocd_app_kc
