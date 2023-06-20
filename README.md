@@ -55,6 +55,11 @@ La fase de Lint se activa en dos eventos, pull request (PR) y push. La fase de T
 
 <img width="1789" alt="Screenshot 2023-06-20 at 23 54 50" src="https://github.com/maciuozz/gitops-con-argocd/assets/118285718/12d2b5a8-0179-46fd-8175-a00e3a1fc545">
 
+Dentro del repositorio ***kcfp-app-argocd-src*** generamos un secret, GHCR_PAT, en Settings --> Secrets and variables --> Actions, con el valor del PAT creado anteriormente. Para definir DOCKERHUB_TOKEN generamos un token en Docker Hub y usamos su valor para crear el secret. Para definir DOCKERHUB_USERNAME simplemente creamos un secret con el valor del nombre de usuario de Docker Hub. A continuación se muestran los 3 secret:
+
+<img width="1224" alt="233875331-b1faa951-b2cb-40e8-a741-0ac7ccf365ff" src="https://github.com/maciuozz/gitops-con-argocd/assets/118285718/66ebabf9-1007-48f8-b3a3-0f32f45b35c2">
+
+
 1. Acceder a [GitHub](https://github.com) y hacer click en el botón de la esquina superior izquierda de nombre **New**, para crear un nuevo repositorio, tal y como se muestra en la siguiente imagen.
 
     ![Select create app argocd](./img/select_create_app_argocd.png)
