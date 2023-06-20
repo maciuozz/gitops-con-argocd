@@ -59,8 +59,9 @@ Dentro del repositorio ***kcfp-app-argocd-src*** generamos un secret, GHCR_PAT, 
 
 <img width="1224" alt="233875331-b1faa951-b2cb-40e8-a741-0ac7ccf365ff" src="https://github.com/maciuozz/gitops-con-argocd/assets/118285718/66ebabf9-1007-48f8-b3a3-0f32f45b35c2">
 
-Después de clonar los 3 repositorios, abrimos 3 pestañas en la terminal y nos ubicamos en cada uno de los repositorios: ***kcfp-app-argocd-src, kcfp-argocd-app y gitops-con-argocd***, respectivamente.
-En Git, en el repositorio ***kcfp-argocd-app***, tenemos que configurar una ***deploy key***. Para ello será necesario realizar los siguientes pasos:
+1. Después de clonar los 3 repositorios, abrimos 3 pestañas en la terminal y nos ubicamos en cada uno de los repositorios: ***kcfp-app-argocd-src, kcfp-argocd-app y gitops-con-
+   argocd***, respectivamente.
+2. En Git, en el repositorio ***kcfp-argocd-app***, tenemos que configurar una ***deploy key***. Para ello será necesario realizar los siguientes pasos:
 1. Crear la deploy key abriendo una terminal y ejecutar el comando:
    
      ```sh
@@ -68,6 +69,10 @@ En Git, en el repositorio ***kcfp-argocd-app***, tenemos que configurar una ***d
      ```
      > Pulsar el botón Enter en todos las preguntas requeridas
 
+2.  En el repositorio ***kcfp-argocd-app*** de Git vamos a Settings --> Deploy keys --> Add deploy key
+3.  Recuperar la clave pública de la deploy key creada anteriormente, ejecutando el siguiente comando:
+
+        cat ~/.ssh/argocd_app_kc.pub
 
 
 8. Abrir una terminal en el directorio `~/test-app-argocd-src` y subir todos los nuevos cambios al repositorio:
