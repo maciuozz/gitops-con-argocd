@@ -1,6 +1,6 @@
 
 
-# GitOps con ArgoCD
+# PROYECTO FINAL - PAOLO SCOTTO DI MASE
 
 ## Software necesario
 
