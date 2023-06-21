@@ -389,7 +389,7 @@ Dentro del repositorio ***kcfp-app-argocd-src*** generamos un secret, GHCR_PAT, 
     ```
 
     En el fragmento anterior, se define un ClusterRole llamado `argocd-image-updater-secrets`, que tiene permisos para acceder a recursos de tipo secrets en cualquier grupo de API
-    (apiGroups: [*]). El ClusterRole permite todas las operaciones (verbs: [*]) en los recursos secrets.
+    (apiGroups: "[*]"). El ClusterRole permite todas las operaciones (verbs: [*]) en los recursos secrets.
     Además, se define un ClusterRoleBinding llamado `argocd-image-updater-secrets` que vincula el ClusterRole anterior al ServiceAccount llamado `argocd-image-updater` en el
     namespace argocd. Esto permite que el ServiceAccount tenga los permisos definidos por el ClusterRole para acceder a los recursos secrets.
     En resumen, este código establece los roles y permisos necesarios para que el ServiceAccount `argocd-image-updater` tenga acceso y autorización para interactuar con los secrets
