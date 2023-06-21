@@ -351,11 +351,11 @@ Dentro del repositorio ***kcfp-app-argocd-src*** generamos un secret, GHCR_PAT, 
       - name: registry-credential
     ```
     La declaración `imagePullSecrets` se utiliza para asociar un secreto de autenticación al Deployment. Al especificar `imagePullSecrets:`, se está indicando que el pod (contenedor)
-    necesita acceder a un registro de Docker privado y utilizar un secreto específico para la autenticación.
-    En este caso, se está especificando `imagePullSecrets:` con el nombre `registry-credential`, lo que significa que se está asociando el Sealed Secret del fichero `sealed-secret.yaml` 
-    creado anteriormente, que se llama `registry-credential`, al Deployment. El sealed secret `registry-credential` contiene la información confidencial necesaria para autenticarse en el
-    registro de Docker y descargar las imágenes del contenedor. El campo encryptedData del sealed secret almacena la información cifrada, en este caso, .dockerconfigjson, que representa
-    las credenciales cifradas del registro. Cuando el Deployment hace referencia al secreto `registry-credential` a través de imagePullSecrets, Kubernetes desencriptará automáticamente el
+    necesita acceder a un registro de Docker privado y utilizar un secreto específico para la autenticación. En este caso, se está especificando `imagePullSecrets:` con el nombre
+    `registry-credential`, lo que significa que se está asociando el Sealed Secret del fichero `sealed-secret.yaml` creado anteriormente, que se llama `registry-credential`, al
+    Deployment. El sealed secret `registry-credential` contiene la información confidencial necesaria para autenticarse en el registro de Docker y descargar las imágenes del
+    contenedor. El campo encryptedData del sealed secret almacena la información cifrada, en este caso, .dockerconfigjson, que representa las credenciales cifradas del registro.
+    Cuando el Deployment hace referencia al secreto `registry-credential` a través de imagePullSecrets, Kubernetes desencriptará automáticamente el
     sealed secret y lo utilizará para autenticar la descarga de imágenes del registro de Docker.
 
 
