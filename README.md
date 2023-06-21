@@ -349,93 +349,16 @@ Dentro del repositorio ***kcfp-app-argocd-src*** generamos un secret, GHCR_PAT, 
     imagePullSecrets:
       - name: registry-credential
     ```
-11. Acceder a la aplicación en ArgoCD a través de la URL https://localhost:8080/applications/argocd/test-argocd-app?view=tree&resource= y comprobar como se ha creado el secreto utilizando sealed-secrets, tal y como se puede ver en la siguiente captura, donde se señala este mediante un rectángulo rojo.
-
-    ![ArgoCD App Creation Sealed Secret](./img/argocd_app_creation_sealed_secret.png)
-
-13. Acceder al repositorio a través de la web de DockerHub y convertirlo en privado, para ello simplemente basta con hacer click sobre el repositorio en la pestaña **Options**, y una vez dentro en la sección **Visibility Settings** hacer click sobre el botón **Make private**, tal y como se expone en la siguiente captura.
-
-    ![ArgoCD App Make repo private](./img/argocd_app_make_repo_private.png)
-
-    Se pedirá confirmación solicitando que se introduzca el nombre del repositorio, escribir el nombre del repositorio y pulsar sobre el botón **Make private**, tal y como se puede ver en la siguiente imagen.
-
-    ![ArgoCD App Make repo private confirmation](./img/argocd_app_make_repo_private_confirmation.png)
-
-14. Modificar el fichero `~/test-argocd-app/helm/templates/deployment.yaml` de forma que quede de la siguiente forma:
-
-    ```yaml
-    apiVersion: apps/v1
-    kind: Deployment
-    metadata:
-      name: {{ include "fast-api-webapp.fullname" . }}
-      labels:
-        {{- include "fast-api-webapp.labels" . | nindent 4 }}
-    spec:
-      {{- if not .Values.autoscaling.enabled }}
-      replicas: {{ .Values.replicaCount }}
-      {{- end }}
-      selector:
-        matchLabels:
-          {{- include "fast-api-webapp.selectorLabels" . | nindent 6 }}
-      template:
-        metadata:
-          {{- with .Values.podAnnotations }}
-          annotations:
-            {{- toYaml . | nindent 8 }}
-          {{- end }}
-          labels:
-            {{- include "fast-api-webapp.selectorLabels" . | nindent 8 }}
-        spec:
-          {{- with .Values.imagePullSecrets }}
-          imagePullSecrets:
-            {{- toYaml . | nindent 8 }}
-          {{- end }}
-          serviceAccountName: {{ include "fast-api-webapp.serviceAccountName" . }}
-          securityContext:
-            {{- toYaml .Values.podSecurityContext | nindent 8 }}
-          containers:
-            - name: {{ .Chart.Name }}
-              securityContext:
-                {{- toYaml .Values.securityContext | nindent 12 }}
-              image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
-              imagePullPolicy: {{ .Values.image.pullPolicy }}
-              ports:
-                - name: http
-                  containerPort: {{ .Values.service.port }}
-                  protocol: TCP
-              livenessProbe:
-                httpGet:
-                  path: /health
-                  port: http
-              readinessProbe:
-                httpGet:
-                  path: /health
-                  port: http
-              resources:
-                {{- toYaml .Values.resources | nindent 12 }}
-          {{- with .Values.nodeSelector }}
-          nodeSelector:
-            {{- toYaml . | nindent 8 }}
-          {{- end }}
-          {{- with .Values.affinity }}
-          affinity:
-            {{- toYaml . | nindent 8 }}
-          {{- end }}
-          {{- with .Values.tolerations }}
-          tolerations:
-            {{- toYaml . | nindent 8 }}
-          {{- end }}
-    ```
-
-15. Modificar el fichero `~/test-argocd-app/helm/values.yaml` en la sección `imagePullSecrets` para que quede de la siguiente forma:
-
-    ```yaml
-    imagePullSecrets:
-      - name: registry-credential
-    ```
+    La declaración `imagePullSecrets` se utiliza para asociar un secreto de autenticación al Deployment. Al especificar `imagePullSecrets:`, se está indicando que el pod (contenedor)
+    necesita acceder a un registro de Docker privado y utilizar un secreto específico para la autenticación.
+    En este caso, se está especificando `imagePullSecrets:` con el nombre `registry-credential`, lo que significa que se está asociando el Sealed Secret `registry-credential` al
+    Deployment. El sealed secret `registry-credential` contiene la información confidencial necesaria para autenticarse en el registro de Docker y descargar las imágenes del
+    contenedor. El campo encryptedData del sealed secret almacena la información cifrada, en este caso, .dockerconfigjson, que representa las credenciales cifradas del registro. 
+    Cuando el Deployment hace referencia al secreto `registry-credential` a través de imagePullSecrets, Kubernetes desencriptará automáticamente el sealed secret y lo utilizará para
+    autenticar la descarga de imágenes del registro de Docker.
 
 
-17. Añadir el fichero `~/test-argocd-app/helm/templates/rbac-argocd-image-updater.yaml` con el siguiente contenido:
+13. En el repositorio ***kcfp-argocd-app/helm/templates*** vale la pena comentar tambien el fichero `rbac-argocd-image-updater.yaml`:
 
     ```yaml
     apiVersion: rbac.authorization.k8s.io/v1
@@ -465,15 +388,13 @@ Dentro del repositorio ***kcfp-app-argocd-src*** generamos un secret, GHCR_PAT, 
       namespace: argocd
     ```
 
-    > Es necesario para que argocd-image-updater pueda acceder al secret creado para acceder al registry privado de la imagen docker
+    En el fragmento anterior, se define un ClusterRole llamado `argocd-image-updater-secrets`, que tiene permisos para acceder a recursos de tipo secrets en cualquier grupo de API
+    (apiGroups: ["*"]). El ClusterRole permite todas las operaciones (verbs: ["*"]) en los recursos secrets.
+    Además, se define un ClusterRoleBinding llamado `argocd-image-updater-secrets` que vincula el ClusterRole anterior al ServiceAccount llamado `argocd-image-updater` en el
+    namespace argocd. Esto permite que el ServiceAccount tenga los permisos definidos por el ClusterRole para acceder a los recursos secrets.
+    En resumen, este código establece los roles y permisos necesarios para que el ServiceAccount `argocd-image-updater` tenga acceso y autorización para interactuar con los secrets
+    en el clúster de Kubernetes.
 
-18. Subir el contenido modificado en la carpeta `~/test-argocd-app` ejecutando los siguientes comandos sobre una terminal en dicha carpeta:
-
-    ```sh
-    git add .
-    git commit -m "fix: added imagePullSecrets configuration"
-    git push
-    ```
 
 19. Realizar cambios en el código de la aplicación, para así generar una nueva versión y comprobar que se puede acceder al código del repositorio Docker utilizando el secreto creado anteriormente. Para ello es necesario modificar el fichero `~/test-app-argocd-src/src/application/app.py` de forma que quede tal y como se muestra a continuación:
 
