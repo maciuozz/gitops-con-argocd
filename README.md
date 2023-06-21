@@ -173,8 +173,9 @@ Dentro del repositorio ***kcfp-app-argocd-src*** generamos un secret, GHCR_PAT, 
 ### Configuración de Sealed Secrets con actualización automática
 
 1. Se desplegará la aplicación [Sealed Secrets](https://github.com/bitnami-labs/sealed-secrets) como una aplicación de ArgoCD añadiendola en la lista de `argocd-apps`.
-   El controlador de Sealed Secrets sirve para cifrar y sellar los secretos sensibles en Kubernetes, proporcionando una capa adicional de seguridad. Al desplegarlo utilizando Argo
-   CD, se garantiza que el controlador esté presente y configurado correctamente en el clúster. A continuación se muestra el contenido del fichero `gitops-con-argocd/argocd-
+   El controlador de Sealed Secrets sirve para sellar (Seal) los secretos sensibles en Kubernetes, proporcionando una capa adicional de seguridad. El controlador utiliza
+   el cifrado asimétrico para proteger los secretos, y se generan claves públicas y privadas para sellar y desellar los secretos. En el contexto de Sealed Secrets, "sellado" se
+   utiliza para referirse al proceso de cifrar los secretos utilizando una clave pública. A continuación se muestra el contenido del fichero `gitops-con-argocd/argocd-
    apps/values-sealed-secrets.yaml`:
 
     ```yaml
@@ -206,7 +207,7 @@ Dentro del repositorio ***kcfp-app-argocd-src*** generamos un secret, GHCR_PAT, 
        argocd.argoproj.io/sync-wave: "0"
     ```
 
-2. Antes es necesario realizar una serie de pasos para preconfigurar la clave de encriptación. Para que no se modifique el contenido de los repositorios remotos,
+3. Antes es necesario realizar una serie de pasos para preconfigurar la clave de encriptación. Para que no se modifique el contenido de los repositorios remotos,
    desde la pestaña ubicada en el repositorio ***gitops-con-argocd*** o desde cualquier otra ubicación ejecutamos:
 
     1. Declarar las variables necesarias:
@@ -230,20 +231,9 @@ Dentro del repositorio ***kcfp-app-argocd-src*** generamos un secret, GHCR_PAT, 
         kubectl create namespace $NAMESPACE
         ```
 
-    4. Un secreto TLS (Transport Layer Security) en Kubernetes se utiliza para almacenar certificados y claves privadas utilizados en conexiones seguras
-       HTTPS. El secreto TLS consta de dos partes principales: el certificado y la clave privada.
-       El certificado TLS es un archivo que contiene información sobre la identidad del servidor (o cliente) y está firmado por una autoridad de certificación confiable. Este secreto
-       se utiliza para asegurar las comunicaciones entre el controlador de Sealed Secrets y otros componentes de Kubernetes. Finalmente, se etiqueta el secreto recién creado con una
-       etiqueta especial sealedsecrets.bitnami.com/sealed-secrets-key=active. Esta etiqueta se utiliza para indicar que el secreto se utilizará como clave de cifrado para los Sealed Secrets.
-       El motivo por el cual se requiere configurar TLS (Transport Layer Security) al desplegar el controlador de Sealed Secrets está relacionado con la seguridad y confidencialidad de los secretos que se almacenan en Kubernetes. El controlador de Sealed Secrets utiliza el cifrado asimétrico para proteger los secretos y garantizar que solo puedan ser descifrados por las claves correspondientes.
-
-El proceso de generación de claves TLS y la creación del secreto TLS están relacionados con la generación de las claves públicas y privadas necesarias para el cifrado y descifrado de los secretos sellados. Estas claves se utilizan en el proceso de sellado (sealing) y desellado (unsealing) de los secretos.
-
-En el caso específico de Sealed Secrets, se utiliza una clave pública para sellar (cifrar) los secretos antes de almacenarlos en Kubernetes, y la clave privada correspondiente se utiliza para desellar (descifrar) los secretos cuando sea necesario acceder a su contenido.
-
-El secreto TLS que se crea en Kubernetes con el certificado y la clave generados se utiliza para asegurar las comunicaciones entre los componentes de Sealed Secrets, como el controlador y el cliente. Esto garantiza que las transmisiones de claves y secretos sellados se realicen de manera segura y confiable.
-
-En resumen, la configuración de TLS en Sealed Secrets es necesaria para garantizar la seguridad de los secretos sellados y las comunicaciones entre los componentes del sistema. El uso de claves públicas y privadas, junto con el secreto TLS, permite un cifrado seguro y confiable de los secretos en Kubernetes.
+    4. Un secreto TLS en Kubernetes se utiliza para almacenar certificados y claves privadas utilizados en conexiones seguras. Se compone de un certificado y una clave privada que
+       garantizan la identidad del servidor o cliente. Este secreto se usa para asegurar las comunicaciones entre el controlador de Sealed Secrets y otros componentes de Kubernetes.
+       En resumen, el uso de claves públicas y privadas, junto con el secreto TLS, permite un cifrado seguro y confiable de los secretos en Kubernetes.
        Creamos entonces un `Secret` de tipo tls, utilizando el par de claves RSA creado anteriormente:
 
         ```sh
@@ -436,7 +426,10 @@ En resumen, la configuración de TLS en Sealed Secrets es necesaria para garanti
 16. Usar la Ip externa del servicio 'ingress-nginx-controller' de tipo 'LoadBalancer' para conectarse a la aplicación:
 
         kubectl get svc -n ingress-nginx
-    
+
+    Si nos conectamos a la aplicación desplegada por ArgoCD vemos:
+    <img width="1792" alt="Screenshot 2023-06-22 at 01 15 27" src="https://github.com/maciuozz/gitops-con-argocd/assets/118285718/e055ad0a-7a0f-4298-9e97-dc0fa6b03d33">
+
 19. Realizar cambios en el código de la aplicación, para así generar una nueva versión y comprobar que se puede acceder al código del repositorio Docker utilizando el secreto creado anteriormente. Para ello es necesario modificar el fichero `~/test-app-argocd-src/src/application/app.py` de forma que quede tal y como se muestra a continuación:
 
     ```python
