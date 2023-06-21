@@ -170,10 +170,12 @@ Dentro del repositorio ***kcfp-app-argocd-src*** generamos un secret, GHCR_PAT, 
 
 13. Acceder a la url http://localhost:8080 y utilizar como credenciales el nombre de usuario admin y la contraseña obtenida en el paso anterior.
 
-### Configuración de sealed secrets con actualización automática.
+### Configuración de Sealed Secrets con actualización automática
 
 1. Se desplegará la aplicación [sealed secrets](https://github.com/bitnami-labs/sealed-secrets) como una aplicación de ArgoCD añadiendola en la lista de `argocd-apps`.
-   A continuación se muestra el contenido del fichero `gitops-con-argocd/argocd-apps/values-sealed-secrets.yaml`:
+   El controlador de Sealed Secrets sirve para cifrar y sellar los secretos sensibles en Kubernetes, proporcionando una capa adicional de seguridad. Al desplegarlo utilizando Argo
+   CD, se garantiza que el controlador esté presente y configurado correctamente en el clúster. A continuación se muestra el contenido del fichero `gitops-con-argocd/argocd-
+   apps/values-sealed-secrets.yaml`:
 
     ```yaml
    applications:
@@ -204,7 +206,7 @@ Dentro del repositorio ***kcfp-app-argocd-src*** generamos un secret, GHCR_PAT, 
        argocd.argoproj.io/sync-wave: "0"
     ```
 
-2. Antes es necesario realizar una serie de pasos para preconfigurar la clave de encriptación. Para que no se modifique el contenido de los repositorios remotos,
+3. Antes es necesario realizar una serie de pasos para preconfigurar la clave de encriptación. Para que no se modifique el contenido de los repositorios remotos,
    desde la pestaña ubicada en el repositorio ***gitops-con-argocd*** o desde cualquier otra ubicación ejecutamos:
 
     1. Declarar las variables necesarias:
@@ -222,7 +224,7 @@ Dentro del repositorio ***kcfp-app-argocd-src*** generamos un secret, GHCR_PAT, 
         openssl req -x509 -days 365 -nodes -newkey rsa:4096 -keyout "$PRIVATEKEY" -out "$PUBLICKEY" -subj "/CN=sealed-secret/O=sealed-secret"
         ```
 
-    3. Crear el namespace donde se va a desplegar sealed-secrets:
+    3. Crear el namespace donde se va a desplegar Sealed Secrets:
 
         ```sh
         kubectl create namespace $NAMESPACE
@@ -242,7 +244,7 @@ Dentro del repositorio ***kcfp-app-argocd-src*** generamos un secret, GHCR_PAT, 
           sealedsecrets.bitnami.com/sealed-secrets-key=active
         ```
 
-3. Desde la pestaña ubicada en el repositorio ***gitops-con-argocd*** desplegar el sealed secrets como una nueva aplicación de ArgoCD utilizando el fichero
+4. Desde la pestaña ubicada en el repositorio ***gitops-con-argocd*** desplegar el controlador de Sealed Secrets como una nueva aplicación de ArgoCD utilizando el fichero
    `argocd-apps/values-sealed-secrets.yaml`:
 
     ```sh
@@ -251,12 +253,17 @@ Dentro del repositorio ***kcfp-app-argocd-src*** generamos un secret, GHCR_PAT, 
       --create-namespace --wait --version 1.1.0
     ```
 
-4. Comprobar como se dispone de una nueva aplicación llamada `sealed-secrets`, tal y como se muestra en la siguiente captura:
+5. Comprobar como se dispone de una nueva aplicación llamada `sealed-secrets`, tal y como se muestra en la siguiente captura:
 
   <img width="1792" alt="Screenshot 2023-06-07 at 15 06 48" src="https://github.com/maciuozz/gitops-con-argocd/assets/118285718/8706ef87-cbc3-4c42-89fd-47559e973a4b">
 
 
-5. Crear un nuevo Secret utilizando kubeseal para acceder al repositorio creado en DockerHub, será necesario recuperar el token creado en el laboratorio anterior en la sección [Creación de cuenta en DockerHub y obtención de token](../1-pipelines-github-workflows-jenkins/README.md#creación-de-cuenta-en-dockerhub-y-obtención-de-token)
+5. Crear un nuevo Secret utilizando kubeseal para acceder al repositorio creado en DockerHub. El motivo de crear un nuevo secreto utilizando kubeseal es para aprovechar las
+   capacidades de cifrado y sellado proporcionadas por el controlador de Sealed Secrets.
+
+Cuando se crea un secreto utilizando kubeseal, el controlador de Sealed Secrets toma el secreto sin cifrar y lo cifra utilizando una clave pública específica del clúster. Esto garantiza que el secreto esté protegido de manera segura mientras se transfiere o almacena en un repositorio de código fuente, como Git.
+
+El secreto cifrado resultante se almacena en un archivo YAML, como sealed-secret.yaml. Este archivo YAML contiene el secreto cifrado y también incluye metadatos que indican al controlador de Sealed Secrets cómo descifrarlo cuando se despliega en el clúster. será necesario recuperar el token de DocherHub creado anteriormente:
 
     ```sh
     kubectl create secret docker-registry registry-credential \
