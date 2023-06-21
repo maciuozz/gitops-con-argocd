@@ -265,7 +265,7 @@ Dentro del repositorio ***kcfp-app-argocd-src*** generamos un secret, GHCR_PAT, 
    que indican al controlador de Sealed Secrets cómo descifrarlo cuando se despliega en el clúster.
    ***--docker-server="https://index.docker.io/v1/"*** especifica el servidor de Docker llamado "index.docker.io". Este servidor es la URL de la API de índice de Docker. El índice de    Docker es responsable de realizar la búsqueda y recuperación de imágenes de contenedores en el Docker Hub. Este secret sirve para proporcionar a los pods del clúster de
    Kubernetes las credenciales de acceso al registro de Docker especificado, lo que permite que los contenedores y las aplicaciones desplegadas en el clúster puedan autenticarse y
-   acceder a las imágenes almacenadas en ese registro. Será necesario recuperar el token de DocherHub creado anteriormente:
+   acceder a las imágenes almacenadas en ese registro. Será necesario recuperar el token de DockerHub creado anteriormente:
 
     ```sh
     kubectl create secret docker-registry registry-credential \
@@ -296,7 +296,7 @@ Dentro del repositorio ***kcfp-app-argocd-src*** generamos un secret, GHCR_PAT, 
     descargar las imágenes de Docker necesarias durante el proceso de despliegue y actualización de aplicaciones.
     ***--docker-server="https://registry-1.docker.io/"*** especifica el servidor de Docker llamado "registry-1.docker.io". Este servidor es la URL principal del Docker
     Hub, que es un registro de Docker público ampliamente utilizado. Se utiliza para almacenar y distribuir imágenes de contenedores. Será necesario recuperar el
-    token de DocherHub creado anteriormente:
+    token de DockerHub creado anteriormente:
 
     ```sh
     kubectl create secret docker-registry reg-cred-argocd-image-updater \
