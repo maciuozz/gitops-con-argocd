@@ -172,7 +172,7 @@ Dentro del repositorio ***kcfp-app-argocd-src*** generamos un secret, GHCR_PAT, 
 
 ### Configuración de Sealed Secrets con actualización automática
 
-1. Se desplegará la aplicación [sealed secrets](https://github.com/bitnami-labs/sealed-secrets) como una aplicación de ArgoCD añadiendola en la lista de `argocd-apps`.
+1. Se desplegará la aplicación [Sealed Secrets](https://github.com/bitnami-labs/sealed-secrets) como una aplicación de ArgoCD añadiendola en la lista de `argocd-apps`.
    El controlador de Sealed Secrets sirve para cifrar y sellar los secretos sensibles en Kubernetes, proporcionando una capa adicional de seguridad. Al desplegarlo utilizando Argo
    CD, se garantiza que el controlador esté presente y configurado correctamente en el clúster. A continuación se muestra el contenido del fichero `gitops-con-argocd/argocd-
    apps/values-sealed-secrets.yaml`:
