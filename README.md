@@ -230,10 +230,21 @@ Dentro del repositorio ***kcfp-app-argocd-src*** generamos un secret, GHCR_PAT, 
         kubectl create namespace $NAMESPACE
         ```
 
-    4. Un secreto TLS (Transport Layer Security) en Kubernetes es un tipo de secreto que se utiliza para almacenar certificados y claves privadas utilizados en conexiones seguras
+    4. Un secreto TLS (Transport Layer Security) en Kubernetes se utiliza para almacenar certificados y claves privadas utilizados en conexiones seguras
        HTTPS. El secreto TLS consta de dos partes principales: el certificado y la clave privada.
-       El certificado TLS es un archivo que contiene información sobre la identidad del servidor (o cliente) y está firmado por una autoridad de certificación confiable. El
-       certificado se utiliza para establecer la autenticidad del servidor y garantizar una conexión segura. Creamos entonces un `Secret` de tipo tls, utilizando el par de claves RSA        creado anteriormente:
+       El certificado TLS es un archivo que contiene información sobre la identidad del servidor (o cliente) y está firmado por una autoridad de certificación confiable. Este secreto
+       se utiliza para asegurar las comunicaciones entre el controlador de Sealed Secrets y otros componentes de Kubernetes. Finalmente, se etiqueta el secreto recién creado con una
+       etiqueta especial sealedsecrets.bitnami.com/sealed-secrets-key=active. Esta etiqueta se utiliza para indicar que el secreto se utilizará como clave de cifrado para los Sealed Secrets.
+       El motivo por el cual se requiere configurar TLS (Transport Layer Security) al desplegar el controlador de Sealed Secrets está relacionado con la seguridad y confidencialidad de los secretos que se almacenan en Kubernetes. El controlador de Sealed Secrets utiliza el cifrado asimétrico para proteger los secretos y garantizar que solo puedan ser descifrados por las claves correspondientes.
+
+El proceso de generación de claves TLS y la creación del secreto TLS están relacionados con la generación de las claves públicas y privadas necesarias para el cifrado y descifrado de los secretos sellados. Estas claves se utilizan en el proceso de sellado (sealing) y desellado (unsealing) de los secretos.
+
+En el caso específico de Sealed Secrets, se utiliza una clave pública para sellar (cifrar) los secretos antes de almacenarlos en Kubernetes, y la clave privada correspondiente se utiliza para desellar (descifrar) los secretos cuando sea necesario acceder a su contenido.
+
+El secreto TLS que se crea en Kubernetes con el certificado y la clave generados se utiliza para asegurar las comunicaciones entre los componentes de Sealed Secrets, como el controlador y el cliente. Esto garantiza que las transmisiones de claves y secretos sellados se realicen de manera segura y confiable.
+
+En resumen, la configuración de TLS en Sealed Secrets es necesaria para garantizar la seguridad de los secretos sellados y las comunicaciones entre los componentes del sistema. El uso de claves públicas y privadas, junto con el secreto TLS, permite un cifrado seguro y confiable de los secretos en Kubernetes.
+       Creamos entonces un `Secret` de tipo tls, utilizando el par de claves RSA creado anteriormente:
 
         ```sh
         kubectl -n "$NAMESPACE" create secret tls \
