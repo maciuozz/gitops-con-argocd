@@ -170,11 +170,13 @@ Dentro del repositorio ***kcfp-app-argocd-src*** generamos un secret, GHCR_PAT, 
 
 13. Acceder a la url http://localhost:8080 y utilizar como credenciales el nombre de usuario admin y la contraseña obtenida en el paso anterior.
 
-### Configuración de Sealed Secrets con actualización automática.
+### Configuración de Sealed secrets con actualización automática.
 
-1. Se desplegará la aplicación [sealed secrets](https://github.com/bitnami-labs/sealed-secrets), para ello se desplegará como una aplicación de ArgoCD añadiendola en la lista de `argocd-apps`, para ello utilizar el nuevo fichero `argocd-apps/values_v4.yaml` donde el cambio más relevante es el siguiente:
+1. Se desplegará la aplicación [sealed secrets](https://github.com/bitnami-labs/sealed-secrets) como una aplicación de ArgoCD añadiendola en la lista de `argocd-apps`.
+   A continuación se muestra el contenido del fichero `gitops-con-argocd/argocd-apps/values-sealed-secrets.yaml`:
 
     ```yaml
+   applications:
    - name: sealed-secrets
      namespace: argocd
      finalizers:
@@ -202,7 +204,8 @@ Dentro del repositorio ***kcfp-app-argocd-src*** generamos un secret, GHCR_PAT, 
        argocd.argoproj.io/sync-wave: "0"
     ```
 
-2. Pero antes es necesario realizar una serie de pasos para preconfigurar la clave de encriptación:
+2. Pero antes es necesario realizar una serie de pasos para preconfigurar la clave de encriptación. Para que no se modifique el contenido de los repositorios remotos,
+   desde la pestaña ubicada en el repositorio ***gitops-con-argocd*** o desde cualquier otra ubicación ejecutamos:
 
     1. Declarar las variables necesarias:
 
@@ -225,7 +228,10 @@ Dentro del repositorio ***kcfp-app-argocd-src*** generamos un secret, GHCR_PAT, 
         kubectl create namespace $NAMESPACE
         ```
 
-    4. Crear un `Secret` de tipo tls, utilizando el par de claves RSA creado anteriormente:
+    4. Un secreto TLS (Transport Layer Security) en Kubernetes es un tipo de secreto que se utiliza para almacenar certificados y claves privadas utilizados en conexiones seguras
+       HTTPS. El secreto TLS consta de dos partes principales: el certificado y la clave privada.
+       El certificado TLS es un archivo que contiene información sobre la identidad del servidor (o cliente) y está firmado por una autoridad de certificación confiable. El
+       certificado se utiliza para establecer la autenticidad del servidor y garantizar una conexión segura. Creamos entonces un `Secret` de tipo tls, utilizando el par de claves RSA        creado anteriormente:
 
         ```sh
         kubectl -n "$NAMESPACE" create secret tls \
@@ -236,7 +242,8 @@ Dentro del repositorio ***kcfp-app-argocd-src*** generamos un secret, GHCR_PAT, 
           sealedsecrets.bitnami.com/sealed-secrets-key=active
         ```
 
-3. Desplegar `argocd-apps` con la nueva versión utilizando el fichero `argocd-apps/values_v4.yaml`:
+3. Desde la pestaña ubicada en el repositorio ***gitops-con-argocd*** desplegar el sealed secrets como una nueva aplicación de ArgoCD utilizando el fichero
+   `argocd-apps/values-sealed-secrets.yaml`:
 
     ```sh
     helm -n argocd upgrade --install argocd-apps argo/argocd-apps \
@@ -244,10 +251,10 @@ Dentro del repositorio ***kcfp-app-argocd-src*** generamos un secret, GHCR_PAT, 
       --create-namespace --wait --version 1.1.0
     ```
 
-4. Comprobar en ArgoCD, accediendo a la URL https://localhost:8080, como se dispone de una nueva aplicación llamada `sealed-secrets`, tal y  
-   como se muestra en la siguiente captura:
+4. Comprobar como se dispone de una nueva aplicación llamada `sealed-secrets`, tal y como se muestra en la siguiente captura:
 
-    ![sealed secrets deployed](./img/sealed_secrets_deployed.png)
+  <img width="1792" alt="Screenshot 2023-06-07 at 15 06 48" src="https://github.com/maciuozz/gitops-con-argocd/assets/118285718/8706ef87-cbc3-4c42-89fd-47559e973a4b">
+
 
 5. Crear un nuevo Secret utilizando kubeseal para acceder al repositorio creado en DockerHub, será necesario recuperar el token creado en el laboratorio anterior en la sección [Creación de cuenta en DockerHub y obtención de token](../1-pipelines-github-workflows-jenkins/README.md#creación-de-cuenta-en-dockerhub-y-obtención-de-token)
 
@@ -270,13 +277,13 @@ Dentro del repositorio ***kcfp-app-argocd-src*** generamos un secret, GHCR_PAT, 
     rm simple_secret.yaml
     ```
 
-6. Mover el fichero creado `sealed-secret.yaml` al repositorio de la aplicación ArgoCD.
+9. Mover el fichero creado `sealed-secret.yaml` al repositorio de la aplicación ArgoCD.
 
     ```sh
     mv sealed-secret.yaml ~/desktop/kcfp-argocd-app/helm/templates
     ```
 
-7. Subir el fichero `sealed-secret.yaml` añadiendo al repositorio `test-argocd-app`, abriendo una terminal en la carpet `~/test-argocd-app` y ejecutando los siguientes comandos:
+10. Subir el fichero `sealed-secret.yaml` añadiendo al repositorio `test-argocd-app`, abriendo una terminal en la carpet `~/test-argocd-app` y ejecutando los siguientes comandos:
 
     ```sh
     git add helm/templates/sealed-secret.yaml
@@ -284,11 +291,11 @@ Dentro del repositorio ***kcfp-app-argocd-src*** generamos un secret, GHCR_PAT, 
     git push
     ```
 
-8. Acceder a la aplicación en ArgoCD a través de la URL https://localhost:8080/applications/argocd/test-argocd-app?view=tree&resource= y comprobar como se ha creado el secreto utilizando sealed-secrets, tal y como se puede ver en la siguiente captura, donde se señala este mediante un rectángulo rojo.
+11. Acceder a la aplicación en ArgoCD a través de la URL https://localhost:8080/applications/argocd/test-argocd-app?view=tree&resource= y comprobar como se ha creado el secreto utilizando sealed-secrets, tal y como se puede ver en la siguiente captura, donde se señala este mediante un rectángulo rojo.
 
     ![ArgoCD App Creation Sealed Secret](./img/argocd_app_creation_sealed_secret.png)
 
-9. Acceder al repositorio a través de la web de DockerHub y convertirlo en privado, para ello simplemente basta con hacer click sobre el repositorio en la pestaña **Options**, y una vez dentro en la sección **Visibility Settings** hacer click sobre el botón **Make private**, tal y como se expone en la siguiente captura.
+12. Acceder al repositorio a través de la web de DockerHub y convertirlo en privado, para ello simplemente basta con hacer click sobre el repositorio en la pestaña **Options**, y una vez dentro en la sección **Visibility Settings** hacer click sobre el botón **Make private**, tal y como se expone en la siguiente captura.
 
     ![ArgoCD App Make repo private](./img/argocd_app_make_repo_private.png)
 
@@ -296,7 +303,7 @@ Dentro del repositorio ***kcfp-app-argocd-src*** generamos un secret, GHCR_PAT, 
 
     ![ArgoCD App Make repo private confirmation](./img/argocd_app_make_repo_private_confirmation.png)
 
-10. Modificar el fichero `~/test-argocd-app/helm/templates/deployment.yaml` de forma que quede de la siguiente forma:
+13. Modificar el fichero `~/test-argocd-app/helm/templates/deployment.yaml` de forma que quede de la siguiente forma:
 
     ```yaml
     apiVersion: apps/v1
@@ -362,14 +369,14 @@ Dentro del repositorio ***kcfp-app-argocd-src*** generamos un secret, GHCR_PAT, 
           {{- end }}
     ```
 
-11. Modificar el fichero `~/test-argocd-app/helm/values.yaml` en la sección `imagePullSecrets` para que quede de la siguiente forma:
+14. Modificar el fichero `~/test-argocd-app/helm/values.yaml` en la sección `imagePullSecrets` para que quede de la siguiente forma:
 
     ```yaml
     imagePullSecrets:
       - name: registry-credential
     ```
 
-12. Crear un nuevo secret usando sealed-secrets para el acceso al registry con la URL del API necesaria por argocd-image-updater:
+15. Crear un nuevo secret usando sealed-secrets para el acceso al registry con la URL del API necesaria por argocd-image-updater:
 
     ```sh
     kubectl create secret docker-registry reg-cred-argocd-image-updater \
@@ -390,13 +397,13 @@ Dentro del repositorio ***kcfp-app-argocd-src*** generamos un secret, GHCR_PAT, 
     rm reg_cred.yaml
     ```
 
-13. Mover el fichero creado `sealed-secret-reg-cred.yaml` al repositorio `test-argocd-app`:
+16. Mover el fichero creado `sealed-secret-reg-cred.yaml` al repositorio `test-argocd-app`:
 
     ```sh
     mv sealed-secret-reg-cred.yaml ~/desktop/kcfp-argocd-app/helm/templates
     ```
 
-14. Añadir el fichero `~/test-argocd-app/helm/templates/rbac-argocd-image-updater.yaml` con el siguiente contenido:
+17. Añadir el fichero `~/test-argocd-app/helm/templates/rbac-argocd-image-updater.yaml` con el siguiente contenido:
 
     ```yaml
     apiVersion: rbac.authorization.k8s.io/v1
@@ -428,7 +435,7 @@ Dentro del repositorio ***kcfp-app-argocd-src*** generamos un secret, GHCR_PAT, 
 
     > Es necesario para que argocd-image-updater pueda acceder al secret creado para acceder al registry privado de la imagen docker
 
-15. Subir el contenido modificado en la carpeta `~/test-argocd-app` ejecutando los siguientes comandos sobre una terminal en dicha carpeta:
+18. Subir el contenido modificado en la carpeta `~/test-argocd-app` ejecutando los siguientes comandos sobre una terminal en dicha carpeta:
 
     ```sh
     git add .
@@ -436,7 +443,7 @@ Dentro del repositorio ***kcfp-app-argocd-src*** generamos un secret, GHCR_PAT, 
     git push
     ```
 
-16. Realizar cambios en el código de la aplicación, para así generar una nueva versión y comprobar que se puede acceder al código del repositorio Docker utilizando el secreto creado anteriormente. Para ello es necesario modificar el fichero `~/test-app-argocd-src/src/application/app.py` de forma que quede tal y como se muestra a continuación:
+19. Realizar cambios en el código de la aplicación, para así generar una nueva versión y comprobar que se puede acceder al código del repositorio Docker utilizando el secreto creado anteriormente. Para ello es necesario modificar el fichero `~/test-app-argocd-src/src/application/app.py` de forma que quede tal y como se muestra a continuación:
 
     ```python
     """
@@ -479,7 +486,7 @@ Dentro del repositorio ***kcfp-app-argocd-src*** generamos un secret, GHCR_PAT, 
         uvicorn.run(app, host="0.0.0.0", port=8081)
     ```
 
-17. Para hacer pre-commit:
+20. Para hacer pre-commit:
 
          pip3 install pre-commit
          pip3 install pre-commit
