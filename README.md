@@ -412,7 +412,8 @@ Dentro del repositorio ***kcfp-app-argocd-src*** generamos un secret, GHCR_PAT, 
     helm -n argocd upgrade --install argocd-apps argo/argocd-apps \
       -f argocd-apps/values.yaml \
       --create-namespace --wait --version 1.1.0 
-
+    ```
+    
     Tendriamos que obtener algo parecido:
     <img width="1790" alt="Screenshot 2023-06-21 at 16 59 09" src="https://github.com/maciuozz/gitops-con-argocd/assets/118285718/5d6d97e4-cdec-4e2a-b150-156bb877eed1">
 
