@@ -61,8 +61,8 @@ Dentro del repositorio ***kcfp-app-argocd-src*** generamos un secret, GHCR_PAT, 
 
 1. Después de clonar los 3 repositorios, abrimos 3 pestañas en la terminal y nos ubicamos en cada uno de los repositorios: ***kcfp-app-argocd-src, kcfp-argocd-app y gitops-con-
    argocd***, respectivamente.
-2. En Git, en el repositorio ***kcfp-argocd-app***, tenemos que configurar una ***deploy key***. Para ello será necesario realizar los siguientes pasos:
-   1. Crear la deploy key abriendo una terminal y ejecutar el comando:
+2. En Git, en el repositorio ***kcfp-argocd-app***, tenemos que configurar una ***Deploy key***. La ***Deploy key*** sirve para dar acceso a ArgoCD al repositorio que contiene los manifiestos de la apliacion y los seales secrets. Los sealed secrets son secretos encriptados que se utilizan para proteger información sensible, como contraseñas o claves de API. Al utilizar una deploy key, se puede otorgar acceso al repositorio que contiene los sealed secrets a herramientas como Sealed Secrets Controller, permitiendo que esta herramienta automatizada desencripte y despliegue los secretos de forma segura.Para ello será necesario realizar los siguientes pasos:
+   - Crear la deploy key abriendo una terminal y ejecutar el comando:
    
      ```sh
      ssh-keygen -t ed25519 -f $HOME/.ssh/argocd_app_kc
