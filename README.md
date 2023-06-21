@@ -75,14 +75,20 @@ Dentro del repositorio ***kcfp-app-argocd-src*** generamos un secret, GHCR_PAT, 
         cat ~/.ssh/argocd_app_kc.pub
    - Copiar el contenido del comando anterior y utilizarlo para rellenar la sección Key en el proceso de añadir una nueva deploy key.
 
-8. Abrir una terminal en el directorio `~/test-app-argocd-src` y subir todos los nuevos cambios al repositorio:
+3. Recuperar la deploy key privada generada anteriormente:
 
    ```sh
-   git add .
-   git commit -m "fix: add initial version"
-   git push
+   cat ~/.ssh/argocd_app_kc
    ```
+4. Utilizar el valor obtenido en el paso anterior para configurar el fichero argocd/values-secret.yaml tal y como se muestra a continuación para completar la sección sshPrivateKey:
 
+       configs:
+          credentialTemplates:
+            test-app-creds:
+              url: git@github.com:<github_username>/kcfp-argocd-app
+              sshPrivateKey:
+                <private_deploy_key>
+   
 9. Si se accede a la web de GitHub para el repositorio se podrá comprobar como se han lanzado los workflows configurados en la carpeta `.github/workflows`, que se encargarán de crear una imagen nueva para el repositorio Docker a través del workflow `release-build`. Se debería ver algo como lo mostrado en la siguiente captura.
 
    ![ArgoCD App src github workflows created Docker image](./img/argocd_app_src_github_workflows_created_docker_image.png)
