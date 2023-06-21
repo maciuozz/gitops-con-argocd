@@ -63,7 +63,10 @@ Dentro del repositorio ***kcfp-app-argocd-src*** generamos un secret, GHCR_PAT, 
    clonamos. Abrimos 3 pestañas en la terminal y nos ubicamos en cada uno de los repositorios: ***kcfp-app-argocd-src, kcfp-argocd-app y gitops-con-
    argocd***, respectivamente. Copiamos el contenido desde los repositorios descargados hacia los repositorios clonados y hacemos commit de los cambios (el repositorio ***gitops-con-
    argocd*** solo lo descargamos para tenerlo en local). 
-2. En Git, en el repositorio ***kcfp-argocd-app***, tenemos que configurar una ***Deploy key***. La deploy key sirve para dar acceso a ArgoCD al repositorio que contiene los manifiestos de la apliacion y los seales secrets. Los sealed secrets son secretos encriptados que se utilizan para proteger información sensible, como contraseñas o claves de API. Al utilizar una deploy key, se puede otorgar acceso al repositorio que contiene los sealed secrets a herramientas como Sealed Secrets Controller, permitiendo que esta herramienta automatizada desencripte y despliegue los secretos de forma segura.Para ello será necesario realizar los siguientes pasos:
+2. En Git, en el repositorio ***kcfp-argocd-app***, tenemos que configurar una ***Deploy key***. La deploy key sirve para dar acceso a ArgoCD al repositorio que contiene los
+   manifiestos de la apliacion y los seales secrets. Los sealed secrets son secretos encriptados que se utilizan para proteger información sensible, como contraseñas o claves de API.
+   Al utilizar una deploy key, se puede otorgar acceso al repositorio que contiene los sealed secrets a herramientas como Sealed Secrets Controller, permitiendo que esta herramienta
+   automatizada desencripte y despliegue los secretos de forma segura.Para ello será necesario realizar los siguientes pasos:
    - Crear la deploy key abriendo una terminal y ejecutar el comando:
    
      ```sh
@@ -77,12 +80,12 @@ Dentro del repositorio ***kcfp-app-argocd-src*** generamos un secret, GHCR_PAT, 
         cat ~/.ssh/argocd_app_kc.pub
    - Copiar el contenido del comando anterior y utilizarlo para rellenar la sección Key en el proceso de añadir una nueva deploy key.
 
-3. Recuperar la deploy key privada generada anteriormente:
+4. Recuperar la deploy key privada generada anteriormente:
 
    ```sh
    cat ~/.ssh/argocd_app_kc
    ```
-4. Utilizar el valor obtenido en el paso anterior para configurar el fichero argocd/values-secret.yaml tal y como se muestra a continuación para completar la sección sshPrivateKey:
+5. Utilizar el valor obtenido en el paso anterior para configurar el fichero argocd/values-secret.yaml tal y como se muestra a continuación para completar la sección sshPrivateKey:
 
    ```yaml
     configs:
