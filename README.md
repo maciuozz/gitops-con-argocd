@@ -120,7 +120,8 @@ Dentro del repositorio ***kcfp-app-argocd-src*** generamos un secret, GHCR_PAT, 
    El Metric Server desempeña un papel fundamental en el funcionamiento del Horizontal Pod Autoscaler (HPA) y el stack de Prometheus.
    El HPA utiliza el Metric Server para obtener información sobre las métricas de los pods, como el uso de CPU y memoria. Basándose en estas métricas, el HPA ajusta automáticamente
    el número de réplicas de un conjunto de pods para escalar horizontalmente la aplicación y satisfacer la demanda actual.
-   Por otro lado, el stack de Prometheus, que es una popular solución de monitoreo y alerta, también se integra con el Metric Server para obtener métricas del clúster Kubernetes. El     Metric Server actúa como una fuente de métricas confiable para Prometheus, que puede utilizar esas métricas para generar gráficos, alertas y realizar análisis en tiempo real.
+   Por otro lado, el stack de Prometheus, que es una popular solución de monitoreo y alerta, también se integra con el Metric Server para obtener métricas del clúster de Kubernetes.
+   El Metric Server actúa como una fuente de métricas confiable para Prometheus, que puede utilizar esas métricas para generar gráficos, alertas y realizar análisis en tiempo real.
 
 
          
