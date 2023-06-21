@@ -422,7 +422,11 @@ Dentro del repositorio ***kcfp-app-argocd-src*** generamos un secret, GHCR_PAT, 
     
     <img width="1791" alt="Screenshot 2023-06-21 at 17 04 40" src="https://github.com/maciuozz/gitops-con-argocd/assets/118285718/33f886de-e022-46b7-91d6-6eaaa7cbc84e">
     <img width="1792" alt="Screenshot 2023-06-21 at 17 04 09" src="https://github.com/maciuozz/gitops-con-argocd/assets/118285718/193c25b0-ba60-49b5-8d4e-d36fcb0b270f">
+    
+15. Usar la Ip externa del servicio 'ingress-nginx-controller' de tipo 'LoadBalancer' para conectarse a la aplicación:
 
+        kubectl get svc -n ingress-nginx
+    
 19. Realizar cambios en el código de la aplicación, para así generar una nueva versión y comprobar que se puede acceder al código del repositorio Docker utilizando el secreto creado anteriormente. Para ello es necesario modificar el fichero `~/test-app-argocd-src/src/application/app.py` de forma que quede tal y como se muestra a continuación:
 
     ```python
@@ -476,17 +480,7 @@ Dentro del repositorio ***kcfp-app-argocd-src*** generamos un secret, GHCR_PAT, 
     git push
     ```
 
-18. Será necesario indicarle a argocd-image-updater las credenciales para acceder al registry de la imagen, para ello es necesario añadir la anotación `argocd-image-updater.argoproj.io/main.pull-secret: reg-cred-argocd-image-updater` en la aplicación de ArgoCD, para ello se desplegará la nueva versión de argocd-apps a través del fichero `argocd-apps/values_v5.yaml`:
 
-    ```sh
-    helm -n argocd upgrade --install argocd-apps argo/argocd-apps \
-      -f argocd-apps/values.yaml \
-      --create-namespace --wait --version 1.1.0
-    ```
-
-14. Usar la Ip externa del servicio 'ingress-nginx-controller' de tipo 'LoadBalancer' para conectarse a la aplicación:
-
-        kubectl get svc -n ingress-nginx
 
 20. Realizar una petición al endpoint `/` usando la Ip obtenida en el paso anterior y comprobar la respuesta recibida:
 
