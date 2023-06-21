@@ -415,8 +415,11 @@ Dentro del repositorio ***kcfp-app-argocd-src*** generamos un secret, GHCR_PAT, 
     ```
     
     Tendriamos que obtener algo parecido:
+    
     <img width="1790" alt="Screenshot 2023-06-21 at 16 59 09" src="https://github.com/maciuozz/gitops-con-argocd/assets/118285718/5d6d97e4-cdec-4e2a-b150-156bb877eed1">
-    Si seleccionamos la aplicación, podemos observar lo que se muestra en las capturas a continuación, donde notamos la versión 1.0.28:
+    
+    Si seleccionamos la aplicación, podemos observar lo que se muestra en las capturas a continuación, donde vemos todos los recursos desplegados y notamos la versión 1.0.28:
+    
     <img width="1791" alt="Screenshot 2023-06-21 at 17 04 40" src="https://github.com/maciuozz/gitops-con-argocd/assets/118285718/33f886de-e022-46b7-91d6-6eaaa7cbc84e">
     <img width="1792" alt="Screenshot 2023-06-21 at 17 04 09" src="https://github.com/maciuozz/gitops-con-argocd/assets/118285718/193c25b0-ba60-49b5-8d4e-d36fcb0b270f">
 
