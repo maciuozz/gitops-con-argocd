@@ -336,7 +336,7 @@ Dentro del repositorio ***kcfp-app-argocd-src*** generamos un secret, GHCR_PAT, 
 
 <img width="1792" alt="Screenshot 2023-06-21 at 15 17 17" src="https://github.com/maciuozz/gitops-con-argocd/assets/118285718/61479dad-e654-42d1-96d0-d0eb534800af">
 
-12. Es importante destacar estos fragmentos de codigo que pertenecen al deployment y al values respectivamente:
+12. Es importante destacar estos fragmentos de codigo que pertenecen al ***deployment.yaml*** y al ***values.yaml*** respectivamente:
 
     ```yaml
     spec:
@@ -344,6 +344,10 @@ Dentro del repositorio ***kcfp-app-argocd-src*** generamos un secret, GHCR_PAT, 
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
       {{- end }}
+    ```
+    ```yaml
+    imagePullSecrets:
+      - name: registry-credential
     ```
 11. Acceder a la aplicación en ArgoCD a través de la URL https://localhost:8080/applications/argocd/test-argocd-app?view=tree&resource= y comprobar como se ha creado el secreto utilizando sealed-secrets, tal y como se puede ver en la siguiente captura, donde se señala este mediante un rectángulo rojo.
 
