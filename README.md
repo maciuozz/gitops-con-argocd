@@ -126,7 +126,11 @@ Dentro del repositorio ***kcfp-app-argocd-src*** generamos un secret, GHCR_PAT, 
 
          
 
-6. Para instalar Nginx Ingress Controller en GCP-GKE ejecutar:
+6. Para exponer la aplicación y permitir que tenga una IP externa, se requiere la configuración de un objeto Ingress y un Ingress Controller que esté vinculado a ese objeto Ingress.
+   El objeto Ingress es un recurso de Kubernetes que define reglas de enrutamiento para el tráfico entrante hacia los servicios dentro del clúster. Estas reglas especifican cómo se
+   debe redirigir el tráfico a los servicios en función de las rutas y otros criterios.
+   El Ingress Controller es el componente responsable de implementar y hacer cumplir las reglas definidas en el objeto Ingress. El Ingress Controller se encarga de gestionar los
+   recursos de red subyacentes (como balanceadores de carga o servicios de enrutamiento) y garantizar que el tráfico llegue a los servicios adecuados en función de las reglas de         enrutamiento definidas en el objeto Ingress. Para instalar Nginx Ingress Controller en GCP-GKE ejecutar:
 
        kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v1.6.4/deploy/static/provider/cloud/deploy.yaml
 
