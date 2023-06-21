@@ -351,14 +351,14 @@ Dentro del repositorio ***kcfp-app-argocd-src*** generamos un secret, GHCR_PAT, 
     ```
     La declaración `imagePullSecrets` se utiliza para asociar un secreto de autenticación al Deployment. Al especificar `imagePullSecrets:`, se está indicando que el pod (contenedor)
     necesita acceder a un registro de Docker privado y utilizar un secreto específico para la autenticación.
-    En este caso, se está especificando `imagePullSecrets:` con el nombre `registry-credential`, lo que significa que se está asociando el Sealed Secret que se llama `registry-credential` al
-    Deployment. El sealed secret `registry-credential` contiene la información confidencial necesaria para autenticarse en el registro de Docker y descargar las imágenes del
-    contenedor. El campo encryptedData del sealed secret almacena la información cifrada, en este caso, .dockerconfigjson, que representa las credenciales cifradas del registro. 
-    Cuando el Deployment hace referencia al secreto `registry-credential` a través de imagePullSecrets, Kubernetes desencriptará automáticamente el sealed secret y lo utilizará para
-    autenticar la descarga de imágenes del registro de Docker.
+    En este caso, se está especificando `imagePullSecrets:` con el nombre `registry-credential`, lo que significa que se está asociando el Sealed Secret del fichero `sealed-secret.yaml` 
+    creado anteriormente, que se llama `registry-credential`, al Deployment. El sealed secret `registry-credential` contiene la información confidencial necesaria para autenticarse en el
+    registro de Docker y descargar las imágenes del contenedor. El campo encryptedData del sealed secret almacena la información cifrada, en este caso, .dockerconfigjson, que representa
+    las credenciales cifradas del registro. Cuando el Deployment hace referencia al secreto `registry-credential` a través de imagePullSecrets, Kubernetes desencriptará automáticamente el
+    sealed secret y lo utilizará para autenticar la descarga de imágenes del registro de Docker.
 
 
-12. En el repositorio ***kcfp-argocd-app/helm/templates*** vale la pena comentar tambien el fichero `rbac-argocd-image-updater.yaml`:
+13. En el repositorio ***kcfp-argocd-app/helm/templates*** vale la pena comentar tambien el fichero `rbac-argocd-image-updater.yaml`:
 
     ```yaml
     apiVersion: rbac.authorization.k8s.io/v1
@@ -388,14 +388,13 @@ Dentro del repositorio ***kcfp-app-argocd-src*** generamos un secret, GHCR_PAT, 
       namespace: argocd
     ```
 
-    En el fragmento anterior, se define un ClusterRole llamado `argocd-image-updater-secrets`, que tiene permisos para acceder a recursos de tipo secrets en cualquier grupo de API
-    (apiGroups: ["\*"]). El ClusterRole permite todas las operaciones (verbs: ["\*"]) en los recursos secrets.
-    Además, se define un ClusterRoleBinding llamado `argocd-image-updater-secrets` que vincula el ClusterRole anterior al ServiceAccount llamado `argocd-image-updater` en el
-    namespace argocd. Esto permite que el ServiceAccount tenga los permisos definidos por el ClusterRole para acceder a los recursos secrets.
-    En resumen, este código establece los roles y permisos necesarios para que el ServiceAccount `argocd-image-updater` tenga acceso y autorización para interactuar con los secrets
-    en el clúster de Kubernetes.
+    Es un archivo de definición de roles y permisos (RBAC), Role-Based Access Control. Se define un ClusterRole llamado `argocd-image-updater-secrets`, que tiene permisos para acceder a recursos de
+    tipo secrets en cualquier grupo de API (apiGroups: ["\*"]), incluyendo el Sealed Secret del fichero `sealed-secret-reg-cred.yaml` que se llama `reg-cred-argocd-image-updater` creado anteriormente.
+    El ClusterRole permite todas las operaciones (verbs: ["\*"]) en los recursos secrets. Además, se define un ClusterRoleBinding llamado `argocd-image-updater-secrets` que vincula el ClusterRole
+    anterior al ServiceAccount llamado `argocd-image-updater` en el namespace argocd. Esto permite que el ServiceAccount tenga los permisos definidos por el ClusterRole para acceder a los recursos secrets.
+    En resumen, este código establece los roles y permisos necesarios para que el ServiceAccount `argocd-image-updater` tenga acceso y autorización para interactuar con los secrets en el clúster de Kubernetes.
 
-13. Desde la pestaña ubicada en el repositorio ***kcfp-app-argocd-src*** hacer pre-commit:
+14. Desde la pestaña ubicada en el repositorio ***kcfp-app-argocd-src*** hacer pre-commit:
 
          pip3 install pre-commit
          pip3 install pre-commit
@@ -405,7 +404,7 @@ Dentro del repositorio ***kcfp-app-argocd-src*** generamos un secret, GHCR_PAT, 
          pip3 install -r src/requirements.txt
          pre-commit run -a
 
-14. Finalmente vamos a desplegar el image updater y la aplicación desde la pestaña ubicada en el repositorio ***gitops-con-argocd***. Para ello se desplegará la nueva versión de
+15. Finalmente vamos a desplegar el image updater y la aplicación desde la pestaña ubicada en el repositorio ***gitops-con-argocd***. Para ello se desplegará la nueva versión de
     argocd-apps a través del fichero `argocd-apps/values.yaml`:
 
     ```sh
@@ -423,7 +422,7 @@ Dentro del repositorio ***kcfp-app-argocd-src*** generamos un secret, GHCR_PAT, 
     <img width="1791" alt="Screenshot 2023-06-21 at 17 04 40" src="https://github.com/maciuozz/gitops-con-argocd/assets/118285718/33f886de-e022-46b7-91d6-6eaaa7cbc84e">
     <img width="1792" alt="Screenshot 2023-06-21 at 17 04 09" src="https://github.com/maciuozz/gitops-con-argocd/assets/118285718/193c25b0-ba60-49b5-8d4e-d36fcb0b270f">
     
-15. Usar la Ip externa del servicio 'ingress-nginx-controller' de tipo 'LoadBalancer' para conectarse a la aplicación:
+16. Usar la Ip externa del servicio 'ingress-nginx-controller' de tipo 'LoadBalancer' para conectarse a la aplicación:
 
         kubectl get svc -n ingress-nginx
     
