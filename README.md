@@ -204,7 +204,7 @@ Dentro del repositorio ***kcfp-app-argocd-src*** generamos un secret, GHCR_PAT, 
        argocd.argoproj.io/sync-wave: "0"
     ```
 
-2. Pero antes es necesario realizar una serie de pasos para preconfigurar la clave de encriptación. Para que no se modifique el contenido de los repositorios remotos,
+2. Antes es necesario realizar una serie de pasos para preconfigurar la clave de encriptación. Para que no se modifique el contenido de los repositorios remotos,
    desde la pestaña ubicada en el repositorio ***gitops-con-argocd*** o desde cualquier otra ubicación ejecutamos:
 
     1. Declarar las variables necesarias:
