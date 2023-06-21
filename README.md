@@ -80,12 +80,12 @@ Dentro del repositorio ***kcfp-app-argocd-src*** generamos un secret, GHCR_PAT, 
         cat ~/.ssh/argocd_app_kc.pub
    - Copiar el contenido del comando anterior y utilizarlo para rellenar la sección Key en el proceso de añadir una nueva deploy key.
 
-4. Recuperar la deploy key privada generada anteriormente:
+3. Recuperar la deploy key privada generada anteriormente:
 
    ```sh
    cat ~/.ssh/argocd_app_kc
    ```
-5. Utilizar el valor obtenido en el paso anterior para configurar el fichero argocd/values-secret.yaml tal y como se muestra a continuación para completar la sección sshPrivateKey:
+4. Utilizar el valor obtenido en el paso anterior para configurar el fichero argocd/values-secret.yaml tal y como se muestra a continuación para completar la sección sshPrivateKey:
 
    ```yaml
     configs:
@@ -96,148 +96,13 @@ Dentro del repositorio ***kcfp-app-argocd-src*** generamos un secret, GHCR_PAT, 
             <private_deploy_key>
     ```
    
-9. Si se accede a la web de GitHub para el repositorio se podrá comprobar como se han lanzado los workflows configurados en la carpeta `.github/workflows`, que se encargarán de crear una imagen nueva para el repositorio Docker a través del workflow `release-build`. Se debería ver algo como lo mostrado en la siguiente captura.
+5. Crear un cluster en GKE con la opción ***regional*** para que haya alta disponibilidad, tolerancia a fallos y mejor rendimiento. 
+   Marcar ***Enable cluster autoscaler***. Hacer click en el nombre del cluster y luego en "CONNECT". Se abrirá una ventana donde copiamos
+   el comando y lo ejecutamos en nuestra consola para conectarnos al cluster. Ejecutamos este comando para obtener permisos 
+   de administrador del cluster:
 
-   ![ArgoCD App src github workflows created Docker image](./img/argocd_app_src_github_workflows_created_docker_image.png)
-
-#### Creación y configuración repositorio para aplicación ArgoCD
-
-1. Acceder a [GitHub](https://github.com) y hacer click en el botón de la esquina superior izquierda de nombre **New**, para crear un nuevo repositorio, tal y como se muestra en la siguiente imagen.
-
-    ![Select create app argocd](./img/select_create_app_argocd.png)
-
-2. Crear un repositorio en GitHub, **dentro de la cuenta de usuario utilizada**, para una aplicación que utilice el lenguaje Python, rellenando los datos de la siguiente forma:
-
-    - **Repository name**: `test-argocd-app`
-    - **Description**: `Repository to store argocd app deployment manifests using helm`
-    - Marcar opción **Private**
-    - Marcar opción **Add a README file**
-
-    Una vez rellenados los datos, hacer click sobre el botón **Create repository**.
-
-3. Al finalizar se redigirá al repositorio creado, debería verse algo como lo mostrado en la siguiente captura.
-
-    ![Repository ArgoCD App Created](./img/repo_argocd_app_created.png)
-
-4. Configurar una [deploy key](https://docs.github.com/es/authentication/connecting-to-github-with-ssh/managing-deploy-keys) para el repositorio, para ello será necesario realizar los siguientes pasos:
-
-     1. Crear la deploy key abriendo una terminal y ejecutar el comando:
-
-        ```sh
-        ssh-keygen -t ed25519 -f $HOME/.ssh/argocd_app_kc
-        ```
-
-        > Pulsar el botón Enter en todos las preguntas requeridas
-
-     2. La salida del comando anterior debería ser algo como lo siguiente:
-
-        ```sh
-        Generating public/private ed25519 key pair.
-        Enter passphrase (empty for no passphrase):
-        Enter same passphrase again:
-        Your identification has been saved in /home/xoanmm/.ssh/argocd_app_kc
-        Your public key has been saved in /home/xoanmm/.ssh/argocd_app_kc.pub
-        The key fingerprint is:
-        SHA256:r2sYrWJHACkGuetHm5rf+hXuoQDXk3L2/JMCw4tZWVU xoanmm@xoanmm-NBLB-WAX9N
-        The key's randomart image is:
-        +--[ED25519 256]--+
-        |o. .      .E     |
-        |o.o      .       |
-        |.o .    .        |
-        |.   o ..         |
-        | o o.BooS        |
-        |. o.+*B o.       |
-        |. ..*.+X  o      |
-        | ..*=.B.++       |
-        | o++o* o+o.      |
-        +----[SHA256]-----+
-        ```
-
-     3. Acceder al repositorio en la web y pulsar sobre la sección **Settings**, tal y como se señala en la siguiente captura mediante un rectángulo rojo.
-
-        ![ArgoCD App repo access settings](./img/argocd_app_repo_access_settings.png)
-
-     4. Hacer click en la sección **Deploy keys** del menú lateral derecho, señalado mediante un rectángulo rojo en la siguiente imagen.
-
-        ![ArgoCD App repo access settings select deploy keys](./img/argocd_app_repo_access_settings_select_deploy_keys.png)
-
-     5. Seleccionar la opción **Add deploy keys** para añadir una nueva imagen, esto se puede ver claramente en la siguiente captura, donde se ha señalado mediante un rectángulo rojo la opción mencionada.
-
-        ![ArgoCD App repo access settings select add deploy keys](./img/argocd_app_repo_access_settings_select_add_deploy_keys.png)
-
-     6. Recuperar la clave pública de la deploy key creada anteriormente, ejecutando el siguiente comando en una terminal:
-
-        ```sh
-        cat ~/.ssh/argocd_app_kc.pub
-        ```
-
-     7. La salida del comando anterior debería ser algo como lo siguiente:
-
-        ```sh
-        ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIFH/gjkpiLeOuxP1L7Yn67F8O++91X/5WMbSFC8O9pWi xoanmm@xoanmm-NBLB-WAX9N
-        ```
-
-     8. Copiar el contenido del comando anterior y utilizar para rellenar la sección `Key` en el proceso de añadir una nueva deploy key, quedando algo como lo mostrado en la siguiente captura.
-
-        ![ArgoCD app configure deploy key](./img/argocd_app_configure_deploy_key.png)
-
-5. Acceder al repositorio desde la Web de GitHub y hacer click en la sección **<> Code**, copiar el valor obtenido para descargar localmente el repositorio.
-
-6. Utilizar el valor obtenido en el paso anterior para descargar localmente el repositorio en la carpeta `~/test-argocd-app`:
-
-    ```sh
-    git clone git@github.com:xoanmm/test-argocd-app.git ~/test-argocd-app
-    ```
-
-7. Copiar el contenido de la carpeta `test-argocd-app` en el repositorio descargado en `~/test-argocd-app`:
-
-    ```sh
-    cp -r test-argocd-app/. ~/test-argocd-app
-    ```
-
-8. Actualizar el repositorio docker de la imagen creada por el alumno fichero `~/test-argocd-app/helm/values.yaml` en la sección `image.repository`:
-
-    ```sh
-    image:
-      repository: <repositorio_imagen_alumno>
-    ```
-
-9. Subir los cambios realizados para el repositorio `test-argocd-app`, abriendo una terminal en la carpeta `~/test-argocd-app` y ejecutar los siguientes comandos:
-
-    ```sh
-    git add .
-    git commit -m "fix: add initial version"
-    git push
-    ```
-
-#### Despliegue y configuración ArgoCD con repositorio GitOps
-
-1. Añadir el repositorio helm de argocd:
-
-    ```sh
-    helm repo add argo https://argoproj.github.io/argo-helm
-    helm repo update
-    ```
-
-2. Recuperar la deploy key privada generada en la sección [Creación y configuración repositorio para aplicación ArgoCD](#creación-y-configuración-repositorio-para-aplicación-argocd):
-
-    ```sh
-    cat ~/.ssh/argocd_app_kc
-    ```
-
-3. Utilizar el valor obtenido en el paso anterior para configurar un nuevo fichero `argocd/values-secret.yaml` tal y como se muestra a continuación para completar la sección `sshPrivateKey`:
-
-    ```yaml
-    configs:
-      credentialTemplates:
-        test-app-creds:
-          url: git@github.com:<github_username>/kcfp-argocd-app
-          sshPrivateKey:
-            <private_deploy_key>
-    ```
-
-4. Crear un cluster en GKE con la opción ***regional*** para que haya alta disponibilidad, tolerancia a fallos y mejor rendimiento. 
-   Marcar ***Enable cluster autoscaler***.
+       kubectl create clusterrolebinding cluster-admin-binding --clusterrole cluster-admin --user $(gcloud config get-value account)
+   
    Si echamos un vistazo al namespace ***kube-system*** vemos la siguiente salida: 
    
        16:53 @/Users/paoloscotto/desktop/gitops-con-argocd ~ $ kubectl get po -n kube-system
@@ -251,12 +116,14 @@ Dentro del repositorio ***kcfp-app-argocd-src*** generamos un secret, GHCR_PAT, 
        kube-proxy-gke-cluster-kcfp-ci-cd-a-default-pool-57bd9d51-52kw   1/1     Running   0          133m
        metrics-server-v0.5.2-67864775dc-dcmvk                           2/2     Running   0          132m
        pdcsi-node-f2psl                                                 2/2     Running   0          133m
-   
-5. Hacer click en el nombre del cluster y luego en "CONNECT". Se abrirá una ventana donde copiamos
-   el comando y lo ejecutamos en nuestra consola para conectarnos al cluster. Ejecutamos este comando para obtener permisos 
-   de administrador del cluster:
 
-       kubectl create clusterrolebinding cluster-admin-binding --clusterrole cluster-admin --user $(gcloud config get-value account)  
+   El Metric Server desempeña un papel fundamental en el funcionamiento del Horizontal Pod Autoscaler (HPA) y el stack de Prometheus.
+   El HPA utiliza el Metric Server para obtener información sobre las métricas de los pods, como el uso de CPU y memoria. Basándose en estas métricas, el HPA ajusta automáticamente
+   el número de réplicas de un conjunto de pods para escalar horizontalmente la aplicación y satisfacer la demanda actual.
+   Por otro lado, el stack de Prometheus, que es una popular solución de monitoreo y alerta, también se integra con el Metric Server para obtener métricas del clúster Kubernetes. El     Metric Server actúa como una fuente de métricas confiable para Prometheus, que puede utilizar esas métricas para generar gráficos, alertas y realizar análisis en tiempo real.
+
+
+         
 
 5. Para instalar Nginx Ingress Controller en GCP-GKE ejecutar:
 
