@@ -85,7 +85,7 @@ Dentro del repositorio ***kcfp-app-argocd-src*** generamos un secret, GHCR_PAT, 
    ```sh
    cat ~/.ssh/argocd_app_kc
    ```
-4. Utilizar el valor obtenido en el paso anterior para configurar el fichero argocd/values-secret.yaml tal y como se muestra a continuación para completar la sección sshPrivateKey:
+4. Desde la pestaña ubicada en el repositorio ***gitops-con-argocd*** utilizamos el valor obtenido en el paso anterior para configurar el fichero argocd/values-secret.yaml tal y como    se muestra a continuación para completar la sección sshPrivateKey:
 
    ```yaml
     configs:
@@ -126,22 +126,26 @@ Dentro del repositorio ***kcfp-app-argocd-src*** generamos un secret, GHCR_PAT, 
 
          
 
-5. Para instalar Nginx Ingress Controller en GCP-GKE ejecutar:
+6. Para instalar Nginx Ingress Controller en GCP-GKE ejecutar:
 
        kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v1.6.4/deploy/static/provider/cloud/deploy.yaml
 
-6. Añadir el repositorio de helm prometheus-community para poder desplegar el chart kube-prometheus-stack:
+7. Añadimos el repositorio de helm prometheus-community para poder desplegar el chart kube-prometheus-stack:
 
        helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
        helm repo update
 
-7. Desplegar el chart kube-prometheus-stack del repositorio de helm añadido en el paso anterior con los valores configurados en el archivo  
-   kube-prometheus-stack/values.yaml en el namespace fast-api:
+8. Desde la pestaña ubicada en el repositorio ***kcfp-argocd-app*** desplegar el chart kube-prometheus-stack del repositorio de helm añadido en el paso anterior con los valores
+   configurados en el archivo kube-prometheus-stack/values.yaml en el namespace fast-api:
 
        helm -n fast-api upgrade --install prometheus prometheus-community/kube-prometheus-stack -f kube-prometheus-stack/values.yaml --create-namespace --wait --version 34.1.1
 
-8. Desplegar el helm chart de argocd utilizando el fichero `argocd/values.yaml` y el fichero `argocd/values-secret.yaml` creado en los pasos 
-   anteriores:
+9. Añadimos el repositorio helm de argocd:
+
+       helm repo add argo https://argoproj.github.io/argo-helm
+       helm repo update
+   
+10. Desde la pestaña ubicada en el repositorio ***gitops-con-argocd*** desplegar el helm chart de argocd utilizando el fichero `argocd/values.yaml` y el fichero `argocd/values-secret.yaml`:
 
     ```sh
     helm -n argocd upgrade --install argocd argo/argo-cd \
@@ -151,17 +155,16 @@ Dentro del repositorio ***kcfp-app-argocd-src*** generamos un secret, GHCR_PAT, 
       --wait --version 5.34.1
     ``` 
 
-9. Realizar un port-forward al servicio de argocd al puerto 8080 local:
+11. Realizar un port-forward al servicio de argocd al puerto 8080 local:
 
        kubectl port-forward service/argocd-server -n argocd 8080:443
 
-10. Obtener la contraseña de acceso a argocd mediante el siguiente comando:
+12. Obtener la contraseña de acceso a argocd mediante el siguiente comando:
 
         kubectl -n argocd get secret argocd-initial-admin-secret \
         -o jsonpath="{.data.password}" | base64 -d
 
-11. Acceder a la url http://localhost:8080 y utilizar como credenciales el nombre de usuario admin y la contraseña obtenida en
-    el paso anterior.
+13. Acceder a la url http://localhost:8080 y utilizar como credenciales el nombre de usuario admin y la contraseña obtenida en el paso anterior.
 
 ### Escenario 3: Aplicación con repositorio para código y otro para GitOps con Secrets con actualización automática
 
