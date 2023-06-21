@@ -258,12 +258,14 @@ Dentro del repositorio ***kcfp-app-argocd-src*** generamos un secret, GHCR_PAT, 
   <img width="1792" alt="Screenshot 2023-06-07 at 15 06 48" src="https://github.com/maciuozz/gitops-con-argocd/assets/118285718/8706ef87-cbc3-4c42-89fd-47559e973a4b">
 
 
-5. Crear un nuevo Secret utilizando kubeseal para acceder al repositorio creado en DockerHub. El motivo de crear un nuevo secreto utilizando kubeseal es para aprovechar las
-   capacidades de cifrado y sellado proporcionadas por el controlador de Sealed Secrets.
-
-Cuando se crea un secreto utilizando kubeseal, el controlador de Sealed Secrets toma el secreto sin cifrar y lo cifra utilizando una clave pública específica del clúster. Esto garantiza que el secreto esté protegido de manera segura mientras se transfiere o almacena en un repositorio de código fuente, como Git.
-
-El secreto cifrado resultante se almacena en un archivo YAML, como sealed-secret.yaml. Este archivo YAML contiene el secreto cifrado y también incluye metadatos que indican al controlador de Sealed Secrets cómo descifrarlo cuando se despliega en el clúster. será necesario recuperar el token de DocherHub creado anteriormente:
+6. Crear un nuevo Secret utilizando kubeseal para acceder al repositorio creado en DockerHub. El motivo de utilizar kubeseal es para aprovechar las capacidades de cifrado y sellado
+   proporcionadas por el controlador de Sealed Secrets. Cuando se crea un secreto utilizando kubeseal, el controlador de Sealed Secrets toma el secreto sin cifrar y lo cifra
+   utilizando una clave pública específica del clúster. Esto garantiza que el secreto esté protegido de manera segura mientras se transfiere o almacena en un repositorio de código
+   fuente, como Git. El secreto cifrado resultante se almacena en un archivo YAML, como sealed-secret.yaml. Este archivo YAML contiene el secreto cifrado y también incluye metadatos
+   que indican al controlador de Sealed Secrets cómo descifrarlo cuando se despliega en el clúster.
+   ***--docker-server="https://index.docker.io/v1/"*** especifica el servidor de Docker llamado "index.docker.io". Este servidor es la URL de la API de índice de Docker. El índice de    Docker es responsable de realizar la búsqueda y recuperación de imágenes de contenedores en el Docker Hub. Este secret sirve para proporcionar a los pods del clúster de
+   Kubernetes las credenciales de acceso al registro de Docker especificado, lo que permite que los contenedores y las aplicaciones desplegadas en el clúster puedan autenticarse y
+   acceder a las imágenes almacenadas en ese registro. Será necesario recuperar el token de DocherHub creado anteriormente:
 
     ```sh
     kubectl create secret docker-registry registry-credential \
@@ -284,25 +286,61 @@ El secreto cifrado resultante se almacena en un archivo YAML, como sealed-secret
     rm simple_secret.yaml
     ```
 
-9. Mover el fichero creado `sealed-secret.yaml` al repositorio de la aplicación ArgoCD.
+7. Mover el fichero creado `sealed-secret.yaml` al repositorio ***kcfp-argocd-app***:
 
     ```sh
     mv sealed-secret.yaml ~/desktop/kcfp-argocd-app/helm/templates
     ```
 
-10. Subir el fichero `sealed-secret.yaml` añadiendo al repositorio `test-argocd-app`, abriendo una terminal en la carpet `~/test-argocd-app` y ejecutando los siguientes comandos:
+8. Crear un nuevo secret que proporciona las credenciales de acceso al registry de Docker necesarias para el componente argocd-image-updater de Argo CD, permitiéndole acceder y
+    descargar las imágenes de Docker necesarias durante el proceso de despliegue y actualización de aplicaciones.
+    ***--docker-server="https://registry-1.docker.io/"*** especifica el servidor de Docker llamado "registry-1.docker.io". Este servidor es la URL principal del Docker
+    Hub, que es un registro de Docker público ampliamente utilizado. Se utiliza para almacenar y distribuir imágenes de contenedores. Será necesario recuperar el
+    token de DocherHub creado anteriormente:
 
     ```sh
-    git add helm/templates/sealed-secret.yaml
-    git commit -m "fix: add sealed secret"
+    kubectl create secret docker-registry reg-cred-argocd-image-updater \
+    --docker-server="https://registry-1.docker.io/" \
+    --docker-username="<dockerhub_username>" \
+    --docker-password="<dockerhub_token>" \
+    --dry-run=client \
+    -n fast-api \
+    -o yaml > reg_cred.yaml
+
+    cat reg_cred.yaml | kubeseal \
+        --controller-namespace secrets \
+        --controller-name sealed-secrets \
+        --format yaml \
+        -n fast-api \
+        > sealed-secret-reg-cred.yaml
+    
+    rm reg_cred.yaml
+    ```
+
+9. Mover el fichero creado `sealed-secret-reg-cred.yaml` al repositorio ***kcfp-argocd-app***:
+
+    ```sh
+    mv sealed-secret-reg-cred.yaml ~/desktop/kcfp-argocd-app/helm/templates
+    ```
+10. Subir los ficheros `sealed-secret.yaml` y `sealed-secret-reg-cred.yaml` añadiendolos al repositorio ***kcfp-argocd-app***:
+
+    ```sh
+    git add .
+    git commit -m "fix: added sealed-secret.yaml and sealed-secret-reg-cred.yaml"
     git push
     ```
 
+11. Antes de realizar el despliegue de la aplicación, transformamos nuestro repositorio de DockerHub en privado. En el mundo real, es muy común tener repositorios privados
+    de Docker para garantizar la seguridad y la gestión adecuada de las imágenes utilizadas en las aplicaciones. Para ello, dentro del repositorio, vamos a Settings --> Make private:
+
+<img width="1792" alt="Screenshot 2023-06-21 at 15 17 17" src="https://github.com/maciuozz/gitops-con-argocd/assets/118285718/61479dad-e654-42d1-96d0-d0eb534800af">
+
+    
 11. Acceder a la aplicación en ArgoCD a través de la URL https://localhost:8080/applications/argocd/test-argocd-app?view=tree&resource= y comprobar como se ha creado el secreto utilizando sealed-secrets, tal y como se puede ver en la siguiente captura, donde se señala este mediante un rectángulo rojo.
 
     ![ArgoCD App Creation Sealed Secret](./img/argocd_app_creation_sealed_secret.png)
 
-12. Acceder al repositorio a través de la web de DockerHub y convertirlo en privado, para ello simplemente basta con hacer click sobre el repositorio en la pestaña **Options**, y una vez dentro en la sección **Visibility Settings** hacer click sobre el botón **Make private**, tal y como se expone en la siguiente captura.
+13. Acceder al repositorio a través de la web de DockerHub y convertirlo en privado, para ello simplemente basta con hacer click sobre el repositorio en la pestaña **Options**, y una vez dentro en la sección **Visibility Settings** hacer click sobre el botón **Make private**, tal y como se expone en la siguiente captura.
 
     ![ArgoCD App Make repo private](./img/argocd_app_make_repo_private.png)
 
@@ -310,7 +348,7 @@ El secreto cifrado resultante se almacena en un archivo YAML, como sealed-secret
 
     ![ArgoCD App Make repo private confirmation](./img/argocd_app_make_repo_private_confirmation.png)
 
-13. Modificar el fichero `~/test-argocd-app/helm/templates/deployment.yaml` de forma que quede de la siguiente forma:
+14. Modificar el fichero `~/test-argocd-app/helm/templates/deployment.yaml` de forma que quede de la siguiente forma:
 
     ```yaml
     apiVersion: apps/v1
@@ -376,39 +414,13 @@ El secreto cifrado resultante se almacena en un archivo YAML, como sealed-secret
           {{- end }}
     ```
 
-14. Modificar el fichero `~/test-argocd-app/helm/values.yaml` en la sección `imagePullSecrets` para que quede de la siguiente forma:
+15. Modificar el fichero `~/test-argocd-app/helm/values.yaml` en la sección `imagePullSecrets` para que quede de la siguiente forma:
 
     ```yaml
     imagePullSecrets:
       - name: registry-credential
     ```
 
-15. Crear un nuevo secret usando sealed-secrets para el acceso al registry con la URL del API necesaria por argocd-image-updater:
-
-    ```sh
-    kubectl create secret docker-registry reg-cred-argocd-image-updater \
-    --docker-server="https://registry-1.docker.io/" \
-    --docker-username="<dockerhub_username>" \
-    --docker-password="<dockerhub_token>" \
-    --dry-run=client \
-    -n fast-api \
-    -o yaml > reg_cred.yaml
-
-    cat reg_cred.yaml | kubeseal \
-        --controller-namespace secrets \
-        --controller-name sealed-secrets \
-        --format yaml \
-        -n fast-api \
-        > sealed-secret-reg-cred.yaml
-    
-    rm reg_cred.yaml
-    ```
-
-16. Mover el fichero creado `sealed-secret-reg-cred.yaml` al repositorio `test-argocd-app`:
-
-    ```sh
-    mv sealed-secret-reg-cred.yaml ~/desktop/kcfp-argocd-app/helm/templates
-    ```
 
 17. Añadir el fichero `~/test-argocd-app/helm/templates/rbac-argocd-image-updater.yaml` con el siguiente contenido:
 
