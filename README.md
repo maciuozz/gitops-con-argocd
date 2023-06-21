@@ -170,9 +170,7 @@ Dentro del repositorio ***kcfp-app-argocd-src*** generamos un secret, GHCR_PAT, 
 
 13. Acceder a la url http://localhost:8080 y utilizar como credenciales el nombre de usuario admin y la contraseña obtenida en el paso anterior.
 
-### Escenario 3: Aplicación con repositorio para código y otro para GitOps con Secrets con actualización automática
-
-#### Configuración de sealed secrets y utilización en repositorio aplicación ArgoCD
+### Configuración de Sealed Secrets con actualización automática.
 
 1. Se desplegará la aplicación [sealed secrets](https://github.com/bitnami-labs/sealed-secrets), para ello se desplegará como una aplicación de ArgoCD añadiendola en la lista de `argocd-apps`, para ello utilizar el nuevo fichero `argocd-apps/values_v4.yaml` donde el cambio más relevante es el siguiente:
 
