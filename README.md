@@ -429,7 +429,7 @@ Dentro del repositorio ***kcfp-app-argocd-src*** generamos un secret, GHCR_PAT, 
 
     Si nos conectamos a la aplicación desplegada por ArgoCD vemos:
     
-    <img width="1792" alt="Screenshot 2023-06-22 at 01 15 27" src="https://github.com/maciuozz/gitops-con-argocd/assets/118285718/e055ad0a-7a0f-4298-9e97-dc0fa6b03d33">
+    <img width="1791" alt="Screenshot 2023-06-22 at 15 42 17" src="https://github.com/maciuozz/gitops-con-argocd/assets/118285718/4c15522d-9d18-46aa-96ed-b02f96a56d7e">
 
     La aplicación tiene 7 endpoint:
     - /health (GET):  Se utiliza para configurar las sondas de `livenessProbe` y `readinessProbe`. Estas sondas se utilizan para verificar el estado de un
