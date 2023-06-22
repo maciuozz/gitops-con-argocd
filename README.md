@@ -428,8 +428,20 @@ Dentro del repositorio ***kcfp-app-argocd-src*** generamos un secret, GHCR_PAT, 
         kubectl get svc -n ingress-nginx
 
     Si nos conectamos a la aplicación desplegada por ArgoCD vemos:
+    
     <img width="1792" alt="Screenshot 2023-06-22 at 01 15 27" src="https://github.com/maciuozz/gitops-con-argocd/assets/118285718/e055ad0a-7a0f-4298-9e97-dc0fa6b03d33">
 
+    La aplicación tiene 7 endpoint:
+    - /health (GET):  Se utiliza para configurar las sondas de "livenessProbe" y "readinessProbe". Estas sondas se utilizan para verificar el estado de un
+      contenedor en ejecución y determinar si está vivo y listo para recibir tráfico.
+    - / (GET): Es el endpoint principal y devuelve un mensaje relacionado con el punto de entrada principal de la aplicación.
+    - /analyze-text-file (POST): Permite seleccionar un archivo de input y analizarlo. Calcula la frecuencia de las palabras en el archivo y devuelve los resultados del análisis.
+    - /api/student (POST): Agrega un nuevo estudiante a la base de datos utilizando los datos proporcionados en el cuerpo de la solicitud. Devuelve el estudiante recién creado.
+    - /students/{student_id}/{field_name}/{field_value} (PUT): Actualiza un campo específico de un estudiante en la base de datos, identificado por su ID. Devuelve el estudiante
+      actualizado.
+    - /allstudents (GET): Obtiene una lista de todos los estudiantes almacenados en la base de datos.
+    - /joke (GET): Devuelve un chiste aleatorio obtenido de una API externa.
+    - 
 19. Realizar cambios en el código de la aplicación, para así generar una nueva versión y comprobar que se puede acceder al código del repositorio Docker utilizando el secreto creado anteriormente. Para ello es necesario modificar el fichero `~/test-app-argocd-src/src/application/app.py` de forma que quede tal y como se muestra a continuación:
 
     ```python
