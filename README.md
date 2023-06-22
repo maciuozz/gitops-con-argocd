@@ -441,7 +441,7 @@ Dentro del repositorio ***kcfp-app-argocd-src*** generamos un secret, GHCR_PAT, 
       actualizado.
     - /allstudents (GET): Obtiene una lista de todos los estudiantes almacenados en la base de datos.
     - /joke (GET): Devuelve un chiste aleatorio obtenido de una API externa.
-    - 
+      
 19. Realizar cambios en el código de la aplicación, para así generar una nueva versión y comprobar que se puede acceder al código del repositorio Docker utilizando el secreto creado anteriormente. Para ello es necesario modificar el fichero `~/test-app-argocd-src/src/application/app.py` de forma que quede tal y como se muestra a continuación:
 
     ```python
