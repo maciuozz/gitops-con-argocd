@@ -432,7 +432,7 @@ Dentro del repositorio ***kcfp-app-argocd-src*** generamos un secret, GHCR_PAT, 
     <img width="1792" alt="Screenshot 2023-06-22 at 01 15 27" src="https://github.com/maciuozz/gitops-con-argocd/assets/118285718/e055ad0a-7a0f-4298-9e97-dc0fa6b03d33">
 
     La aplicación tiene 7 endpoint:
-    - /health (GET):  Se utiliza para configurar las sondas de "livenessProbe" y "readinessProbe". Estas sondas se utilizan para verificar el estado de un
+    - /health (GET):  Se utiliza para configurar las sondas de `livenessProbe` y `readinessProbe`. Estas sondas se utilizan para verificar el estado de un
       contenedor en ejecución y determinar si está vivo y listo para recibir tráfico.
     - / (GET): Es el endpoint principal y devuelve un mensaje relacionado con el punto de entrada principal de la aplicación.
     - /analyze-text-file (POST): Permite seleccionar un archivo de input y analizarlo. Calcula la frecuencia de las palabras en el archivo y devuelve los resultados del análisis.
@@ -442,59 +442,33 @@ Dentro del repositorio ***kcfp-app-argocd-src*** generamos un secret, GHCR_PAT, 
     - /allstudents (GET): Obtiene una lista de todos los estudiantes almacenados en la base de datos.
     - /joke (GET): Devuelve un chiste aleatorio obtenido de una API externa.
       
-19. Realizar cambios en el código de la aplicación, para así generar una nueva versión y comprobar que se puede acceder al código del repositorio Docker utilizando el secreto creado anteriormente. Para ello es necesario modificar el fichero `~/test-app-argocd-src/src/application/app.py` de forma que quede tal y como se muestra a continuación:
+17. Realizamos un cambio en el archivo ***kcfp-app-argocd-src/src/application/app.py*** con el objetivo de generar una nueva versión y que ArgoCD la detecte automáticamente. En este
+    cambio, modificamos el `root_endpoint_message` como se muestra a continuación:
 
     ```python
-    """
-    Module for define API endpoints
-    """
+    
+    ...
 
-    import uvicorn
-    from fastapi import FastAPI
+    app = FastAPI()
 
+    root_endpoint_message = {"message": "The new version will be detected and updated automatically in private repository"}
 
-    app = FastAPI(
-        port=8081
-    )
-
-    root_endpoint_message = {"message": "Hello world will be updated automatically in private repository"}
-    health_message = {"health": "ok"}
-
-    """
-    Root endpoint definition
-    """
-    @app.get("/")
-    async def root():
-        """Result of calling the root endpoint
-        Returns
-        -------
-        'Hello world' message
-        """
-        return root_endpoint_message
-
-    @app.get("/health")
-    async def health():
-        """Result of calling /health endpoint
-        Returns
-        -------
-        JSON message with health status
-        """
-        return health_message
-
-    if __name__ == "__main__":
-        uvicorn.run(app, host="0.0.0.0", port=8081)
+    ...
     ```
 
 
 
-17. Subir los cambios del repositorio, abriendo una terminal sobre el directorio `~/test-app-argocd-src` y ejecutando los siguientes comandos:
+18. Subimos los cambios del repositorio desde la pestaña ubicada en el repositorio ***kcfp-app-argocd-src***. Vemos 2 ejemplo de sintaxix para realizar un commit que
+    son ambos validos:
 
     ```sh
     git add .
-    git commit -m "fix: changed root entrypoint message"
+    git commit -m "fix: changed root endpoint message" --> git commit -m "fix(app): changed root endpoint message"
     git push
     ```
 
+
+        
 
 
 20. Realizar una petición al endpoint `/` usando la Ip obtenida en el paso anterior y comprobar la respuesta recibida:
