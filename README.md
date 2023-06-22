@@ -458,7 +458,7 @@ Dentro del repositorio ***kcfp-app-argocd-src*** generamos un secret, GHCR_PAT, 
 
 
 
-18. Subimos los cambios del repositorio desde la pestaña ubicada en el repositorio ***kcfp-app-argocd-src***. Vemos 2 ejemplo de sintaxix para realizar un commit que
+18. Subimos los cambios del repositorio desde la pestaña ubicada en el repositorio ***kcfp-app-argocd-src***. Vemos 2 ejemplos de sintaxis para realizar un commit que
     son ambos validos:
 
     ```sh
@@ -471,7 +471,8 @@ Dentro del repositorio ***kcfp-app-argocd-src*** generamos un secret, GHCR_PAT, 
         
 
 
-20. Realizar una petición al endpoint `/` usando la Ip obtenida en el paso anterior y comprobar la respuesta recibida:
+19. Esperamos algunos minutos para que se despliegue la nueva version y realizamos una petición al endpoint `/` usando la Ip obtenida en el paso anterior para
+     comprobar la respuesta recibida:
 
     ```sh
     curl -X 'GET' \
@@ -482,18 +483,18 @@ Dentro del repositorio ***kcfp-app-argocd-src*** generamos un secret, GHCR_PAT, 
     La respuesta obtenida debería ser la siguiente:
 
     ```sh
-    {"message":"Hello world will be updated automatically in private repository"}
+    {"message":"The new version will be detected and updated automatically in private repository"}
     ```
 
-21. Comprobar como se ha cambiado la imagen utilizada para el Deployment `my-app-fast-api-webapp` desplegado en el namespace `fast-api` por la nueva imagen con la nueva versión:
+20. Comprobar como se ha cambiado la imagen utilizada para el Deployment `my-app-fast-api-webapp` desplegado en el namespace `fast-api` por la nueva imagen con la nueva versión:
 
     ```sh
     kubectl -n fast-api get deployment my-app-fast-api-webapp -o=jsonpath='{$.spec.template.spec.containers[:1].image}' | cut -d ':' -f2
     ```
 
-22. Para ver la salida de las métricas de Prometheus expuestas por la aplicación ejecutamos:
+21. Para ver la salida de las métricas de Prometheus expuestas por la aplicación ejecutamos:
 
-        kubectl -n monitoring port-forward service/my-release-simple-server 8000:8000
+        kubectl -n fast-api port-forward service/my-app-fast-api-webapp 8000:8000
 
 23. Abriendo http://localhost:8000/ vemos:
 
@@ -509,156 +510,38 @@ Dentro del repositorio ***kcfp-app-argocd-src*** generamos un secret, GHCR_PAT, 
         # HELP healthcheck_requests_total Total number of requests to healthcheck
         # TYPE healthcheck_requests_total counter
         healthcheck_requests_total 574.0
+        # HELP frequencies_requests_total Total number of requests to frequency analyzer endpoint
+        # TYPE frequencies_requests_total counter
+        frequencies_requests_total 7.0
+        # HELP get_all_students_total Total number of requests to the endpoint to get a list of students
+        # TYPE get_all_students_total counter
+        get_all_students_total 50.0
+        # HELP students_update_total Total number of requests to the endpoint to update a student
+        # TYPE students_update_total counter
+        students_update_total 8.0
+        # HELP server_requests_total Total number of requests to this webserver
+        # TYPE server_requests_total counter
+        server_requests_total 26990.0
+        # HELP app_start_count_total Number of times the application has started
+        # TYPE app_start_count_total counter
+        app_start_count_total 1.0
 
 24. Abrir una nueva pestaña en la terminal y realizar un port-forward del puerto http-web del servicio de Grafana 
     al puerto 3000 de la máquina:
 
-        kubectl -n monitoring port-forward svc/prometheus-grafana 3000:http-web
+        kubectl -n fast-api port-forward svc/prometheus-grafana 3000:http-web
 
 25. Acceder a la dirección http://localhost:3000. Las credenciales de Grafana por defecto son admin para el usuario y prom-operator para la  
-    contraseña. Hacemos un import del fichero custom_dashboard.json, seleccionamos el namespace monitoring y uno de los pods de la aplicación FastAPI. Se pueden observar 7 paneles:
+    contraseña. Hacemos un import del fichero custom_dashboard.json, seleccionamos el namespace monitoring y uno de los pods de la aplicación FastAPI. Se pueden observar 10 paneles:
 
-    - 4 paneles dedicados a los endpoints, los cuales registran el número de llamadas recibidas por cada uno de ellos.
+    - 7 paneles dedicados a los endpoints, los cuales registran el número de llamadas recibidas por cada uno de ellos.
     - 1 panel que cuenta el número de veces que la aplicación ha sido iniciada.
     - 1 panel que muestra el número total de llamadas realizadas.
     - 1 panel que muestra el uso actual de CPU en comparación con la cantidad máxima solicitada.
 
-Cambiar el json y poner foto...
+<img width="1792" alt="Screenshot 2023-06-22 at 15 33 34" src="https://github.com/maciuozz/gitops-con-argocd/assets/118285718/e3f3e982-3840-4888-8218-5ab745738959">
 
-#### Configuración de notificaciones en ArgoCD y commit status
 
-1. En el laboratorio anterior se creó un aplicación en GitHub en la sección [Creación de app en GitHub para utilizar con Jenkins](../1-pipelines-github-workflows-jenkins/README.md#creación-de-app-en-github-para-utilizar-con-jenkins). Acceder a la información de la aplicación instalada desde la sección **Developer settings** dentro de la sección **Settings**, tal y como se muestra en la siguiente imagen.
 
-    ![Access developer settings](./img/access_developer_settings.png)
-
-    Seleccionar la aplicación Jenkins, y hacer click en la sección **Edit**, tal y como se señala en la imagen anterior un rectángulo rojo.
-
-2. Se accederá a la información detallada de la aplicación, tal y como se puede ver en la siguiente captura.
-    ![Access Jenkins app installed](./img/access_jenkins_app_installed.png)
-
-    Hacer click en la opción **Install App**, señalada en la imagen anterior mediante un rectángulo rojo.
-
-3. En la cuenta donde se ha instalado hacer click sobre el botón de la rueda dentada, tal y como se expone en la siguiente imagen.
-
-    ![Access Jenkins app installed detailed](./img/access_jenkins_app_installed_detailed.png)
-
-4. En la URL del navegador obtener la última parte de la URL, ya que estos son el installationID de la aplicación.
-
-5. Hacer click en la sección **App Settings**, y se accederá a los detalles de la aplicación y ajustes de la misma, tal y como se puede ver en la siguiente captura.
-
-    ![Access Jenkins app installed settings](./img/access_jenkins_app_installed_settings.png)
-
-    Anotar el nombre de **App ID**, señalado en la imagen anterior mediante un rectángulo rojo.
-
-6. Hacer click en la sección **Private keys** sobre el botón **Generate a private key**, tal y como se muestra en la siguiente captura, donde se ha señalado el botón mediante un rectángulo rojo.
-
-    ![Generate app private key](./img/generate_app_private_key.png)
-
-7. Modificar el fichero `argocd/values-notifications.yaml` utilizando el `installationID` y `App ID` de la aplicación obtenidos en los pasos anteriores:
-
-    ```yaml
-    notifications:
-      argocdUrl: "https://argocd.example.com"
-      notifiers:
-        service.github: |
-          appID: <appID>
-          installationID: <appInstallionID>
-          privateKey: $github-privateKey
-    ```
-
-8. Modificar el fichero `argocd/values-secret.yaml` añadiendo el contenido de la private key descargada en los pasos anteriores en la siguiente sección:
-
-    ```yaml
-    notifications:
-    secret:
-      items:
-        github-privateKey: |
-          <app_private_key>
-    ```
-
-9. Desplegar argocd con los nuevos valores configurados:
-
-    ```sh
-    helm -n argocd upgrade --install argocd argo/argo-cd \
-      -f argocd/values.yaml \
-      -f argocd/values-secret.yaml \
-      -f argocd/values-notifications.yaml \
-      --create-namespace --wait --version 5.34.4
-    ```
-
-10. Es necesario añadir una serie de anotaciones a la aplicación de ArgoCD para que se subscriba a los cambios y notifique de ellos, para ello es necesario desplegar de nuevo la aplicación `test-argocd-app` utilizando los valores configurados en `argocd-apps/values_v6.yaml` donde los cambios más relevantes están en la definición de la aplicación `test-argocd-app`:
-
-    ```yaml
-    # test-app
-    - name: test-argocd-app
-      namespace: argocd
-      finalizers:
-      - resources-finalizer.argocd.argoproj.io
-      project: default
-      source:
-        helm:
-          releaseName: my-app
-          valueFiles:
-            - values.yaml
-        path: helm
-        repoURL: git@github.com:xoanmm/test-argocd-app.git
-        targetRevision: main
-      destination:
-        server: https://kubernetes.default.svc
-        namespace: fast-api
-      syncPolicy:
-        automated:
-          prune: true
-          selfHeal: true
-        syncOptions:
-        - CreateNamespace=true
-      ignoreDifferences:
-      - group: apps
-        kind: Deployment
-        jsonPointers:
-        - /spec/replicas
-      additionalAnnotations:
-        argocd-image-updater.argoproj.io/write-back-method: git:secret:argocd/argocd-repo-creds-test-argocd-app
-        argocd-image-updater.argoproj.io/main.update-strategy: semver
-        argocd-image-updater.argoproj.io/main.helm.image-name: image.repository
-        argocd-image-updater.argoproj.io/main.helm.image-tag: image.tag
-        argocd-image-updater.argoproj.io/main.force-update: 'true'
-        argocd-image-updater.argoproj.io/git-branch: main
-        argocd-image-updater.argoproj.io/image-list: >-
-          main=xoanmallon/test-argocd-app
-        argocd-image-updater.argoproj.io/main.pull-secret: >-
-          pullsecret:fast-api/reg-cred-argocd-image-updater
-            notifications.argoproj.io/subscribe.on-sync-succeeded.github: ''
-        notifications.argoproj.io/subscribe.on-deployed.github: ''
-        notifications.argoproj.io/subscribe.on-sync-failed.github: ''
-        notifications.argoproj.io/subscribe.app-sync-status-unknown.github: ''
-    ```
-
-11. Desplegar de nuevo la aplicación `argocd-apps` utilizando los valores del fichero `argocd-apps/values_v6.yaml`:
-
-    ```sh
-    helm -n argocd upgrade --install argocd-apps argo/argocd-apps \
-      -f argocd-apps/values_v6.yaml \
-      --create-namespace --wait --version 1.1.0
-    ```
-
-12. Acceder a la URL https://localhost:8080/applications/argocd/test-argocd-app?view=tree&conditions=false&resource= y hacer click sobre el botón `Sync`, tal y como se señala en la siguiente imagen mediante un rectangulo rojo.
-
-    ![ArgoCD App Sync](./img/argocd_app_sync.png)
-
-    En las opciones que se mostrarán dejar todo por defecto y hacer click sobre el botón **Synchronize**, señalado en la siguiente captura mediante un rectángulo rojo.
-
-    ![ArgoCD App Synchronize](./img/argocd_app_synchronize.png)
-
-13. Acceder al repositorio en GitHub para la aplicación de ArgoCD de nombre `test-argocd-app` y comprobar como se ha mandado una notificación cambiando el commit status del último commit.
-
-    ![ArgoCD App Synchronize Notification](./img/argocd_app_synchronize_notification.png)
-
-    Si se hace click sobre la misma se puede observar con más detalle la información.
-    ![ArgoCD App Synchronize Notification Detailed](./img/argocd_app_synchronize_notification_detailed.png)
-
-    Haciendo click sobre el botón **Details** señalado mediante un rectángulo rojo en la imagen anterior se accederá a la URL de la aplicación, tal y como se muestra en la siguiente captura.
-
-    ![ArgoCD App Synchronize Notification Detailed View App](./img/argocd_app_synchronize_notification_detailed_view_app.png)
 
 
