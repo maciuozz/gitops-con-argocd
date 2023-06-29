@@ -64,7 +64,7 @@ Dentro del repositorio ***kcfp-app-argocd-src*** generamos un secret, GHCR_PAT, 
 2. En Git, en el repositorio ***kcfp-argocd-app***, tenemos que configurar una ***Deploy key***. La deploy key sirve para dar acceso a ArgoCD al repositorio que contiene los
    manifiestos de la apliacion y los Sealed Secrets. Los Sealed Secrets son secretos encriptados que se utilizan para proteger información sensible, como contraseñas o claves de API.
    Al utilizar una deploy key, se puede otorgar acceso al repositorio que contiene los sealed secrets a herramientas como Sealed Secrets Controller, permitiendo que esta herramienta
-   automatizada desencripte y despliegue los secretos de forma segura.Para ello será necesario realizar los siguientes pasos:
+   automatizada desencripte y despliegue los secretos de forma segura. Para ello será necesario realizar los siguientes pasos:
    - Crear la deploy key abriendo una terminal y ejecutar el comando:
    
      ```sh
@@ -172,8 +172,9 @@ Dentro del repositorio ***kcfp-app-argocd-src*** generamos un secret, GHCR_PAT, 
 
 1. Se desplegará la aplicación [Sealed Secrets](https://github.com/bitnami-labs/sealed-secrets) como una aplicación de ArgoCD añadiendola en la lista de `argocd-apps`.
    El controlador de Sealed Secrets es responsable de descifrar los objetos SealedSecret y generar los Secretos originales en el clúster y tiene la clave privada necesaria para
-   descifrar los secretos sellados y cifrados con su clave pública. Este controlador actúa como una capa adicional de seguridad, ya que solo el controlador tiene acceso a la clave
-   privada necesaria para descifrar los secretos sellados. A continuación se muestra el contenido del fichero `gitops-con-argocd/argocd-apps/values-sealed-secrets.yaml`:
+   descifrar los secretos sellados y cifrados con su clave pública. El Sealed Secrets Controller está vinculado al secreto TLS, que creamos a continuacion, que contiene la clave
+   pública y privada. Este controlador actúa como una capa adicional de seguridad, ya que solo el controlador tiene acceso a la clave privada necesaria para descifrar los secretos
+   sellados. A continuación se muestra el contenido del fichero `gitops-con-argocd/argocd-apps/values-sealed-secrets.yaml`:
 
     ```yaml
    applications:
@@ -228,9 +229,9 @@ Dentro del repositorio ***kcfp-app-argocd-src*** generamos un secret, GHCR_PAT, 
         kubectl create namespace $NAMESPACE
         ```
 
-    4. Un secreto TLS en Kubernetes se utiliza para almacenar certificados y claves privadas utilizados en conexiones seguras. Se compone de un certificado y una clave privada que
-       garantizan la identidad del servidor o cliente. Este secreto se usa para asegurar las comunicaciones entre el controlador de Sealed Secrets y otros componentes de Kubernetes.
-       En resumen, el uso de claves públicas y privadas, junto con el secreto TLS, permite un cifrado seguro y confiable de los secretos en Kubernetes.
+    4. Un secreto TLS en Kubernetes se utiliza para almacenar certificados y claves privadas utilizados en conexiones seguras. Se compone de un certificado (clave publica) y una
+       clave privada que garantizan la identidad del servidor o cliente. Este secreto se usa para asegurar las comunicaciones entre el controlador de Sealed Secrets y otros
+       componentes de Kubernetes. En resumen, el uso de claves públicas y privadas, junto con el secreto TLS, permite un cifrado seguro y confiable de los secretos en Kubernetes.
        Creamos entonces un `Secret` de tipo tls, utilizando el par de claves RSA creado anteriormente:
 
         ```sh
@@ -256,10 +257,9 @@ Dentro del repositorio ***kcfp-app-argocd-src*** generamos un secret, GHCR_PAT, 
   <img width="1792" alt="Screenshot 2023-06-07 at 15 06 48" src="https://github.com/maciuozz/gitops-con-argocd/assets/118285718/8706ef87-cbc3-4c42-89fd-47559e973a4b">
 
 
-5. Crear un nuevo Secret utilizando kubeseal para acceder al repositorio creado en DockerHub. El motivo de utilizar kubeseal es para aprovechar las capacidades de cifrado y sellado
-   proporcionadas por el controlador de Sealed Secrets. Para cifrar (o sellar) un secreto utilizando kubeseal, se utiliza la clave pública asociada a la clave privada del controlador
-   de Sealed Secrets. El controlador de Sealed Secrets tiene la clave privada correspondiente a esa clave pública y es capaz de descifrar los secretos sellados utilizando su clave privada.. En el contexto de Sealed Secrets, "sellado" se
-   utiliza para referirse al proceso de cifrar los secretos utilizando una clave pública.Cuando se crea un secreto utilizando kubeseal, el controlador de Sealed Secrets toma el secreto sin cifrar y lo cifra
+5. Crear un nuevo Secret utilizando kubeseal para acceder al repositorio creado en DockerHub. Para cifrar (o sellar) un secreto, kubeseal interactúa con el controlador de
+   Sealed Secrets que tiene la clave privada correspondiente a esa clave pública. En el contexto de Sealed Secrets, "sellado" se utiliza para referirse al proceso de cifrar los
+   secretos utilizando una clave pública. Cuando se crea un secreto utilizando kubeseal, el controlador de Sealed Secrets toma el secreto sin cifrar y lo cifra
    utilizando una clave pública específica del clúster. Esto garantiza que el secreto esté protegido de manera segura mientras se transfiere o almacena en un repositorio de código
    fuente, como Git. El secreto cifrado resultante se almacena en un archivo YAML, como sealed-secret.yaml. Este archivo YAML contiene el secreto cifrado y también incluye metadatos
    que indican al controlador de Sealed Secrets cómo descifrarlo cuando se despliega en el clúster.
