@@ -128,26 +128,27 @@ Dentro del repositorio ***kcfp-app-argocd-src*** generamos un secret, GHCR_PAT, 
    El objeto Ingress es un recurso de Kubernetes que define reglas de enrutamiento para el tráfico entrante hacia los servicios dentro del clúster. Estas reglas especifican cómo se
    debe redirigir el tráfico a los servicios en función de las rutas y otros criterios.
    El Ingress Controller es el componente responsable de implementar y hacer cumplir las reglas definidas en el objeto Ingress. El Ingress Controller se encarga de gestionar los
-   recursos de red subyacentes (como balanceadores de carga o servicios de enrutamiento) y garantizar que el tráfico llegue a los servicios adecuados en función de las reglas de         enrutamiento definidas en el objeto Ingress. Para instalar Nginx Ingress Controller en GCP-GKE ejecutar:
+   recursos de red subyacentes (como balanceadores de carga o servicios de enrutamiento) y garantizar que el tráfico llegue a los servicios adecuados en función de las reglas de
+   enrutamiento definidas en el objeto Ingress. Para instalar Nginx Ingress Controller en GCP-GKE ejecutar:
 
        kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v1.6.4/deploy/static/provider/cloud/deploy.yaml
 
-7. Añadimos el repositorio de helm prometheus-community para poder desplegar el chart kube-prometheus-stack:
+8. Añadimos el repositorio de helm prometheus-community para poder desplegar el chart kube-prometheus-stack:
 
        helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
        helm repo update
 
-8. Desde la pestaña ubicada en el repositorio ***kcfp-argocd-app*** desplegar el chart kube-prometheus-stack del repositorio de helm añadido en el paso anterior con los valores
+9. Desde la pestaña ubicada en el repositorio ***kcfp-argocd-app*** desplegar el chart kube-prometheus-stack del repositorio de helm añadido en el paso anterior con los valores
    configurados en el archivo kube-prometheus-stack/values.yaml en el namespace fast-api:
 
        helm -n fast-api upgrade --install prometheus prometheus-community/kube-prometheus-stack -f kube-prometheus-stack/values.yaml --create-namespace --wait --version 34.1.1
 
-9. Añadimos el repositorio helm de argocd:
+10. Añadimos el repositorio helm de argocd:
 
        helm repo add argo https://argoproj.github.io/argo-helm
        helm repo update
    
-10. Desde la pestaña ubicada en el repositorio ***gitops-con-argocd*** desplegar el helm chart de argocd utilizando el fichero `argocd/values.yaml` y el fichero `argocd/values-secret.yaml`:
+11. Desde la pestaña ubicada en el repositorio ***gitops-con-argocd*** desplegar el helm chart de argocd utilizando el fichero `argocd/values.yaml` y el fichero `argocd/values-secret.yaml`:
 
     ```sh
     helm -n argocd upgrade --install argocd argo/argo-cd \
@@ -157,22 +158,22 @@ Dentro del repositorio ***kcfp-app-argocd-src*** generamos un secret, GHCR_PAT, 
       --wait --version 5.34.1
     ``` 
 
-11. Realizar un port-forward al servicio de argocd al puerto 8080 local:
+12. Realizar un port-forward al servicio de argocd al puerto 8080 local:
 
        kubectl port-forward service/argocd-server -n argocd 8080:443
 
-12. Obtener la contraseña de acceso a argocd mediante el siguiente comando:
+13. Obtener la contraseña de acceso a argocd mediante el siguiente comando:
 
         kubectl -n argocd get secret argocd-initial-admin-secret \
         -o jsonpath="{.data.password}" | base64 -d
 
-13. Acceder a la url http://localhost:8080 y utilizar como credenciales el nombre de usuario admin y la contraseña obtenida en el paso anterior.
+14. Acceder a la url http://localhost:8080 y utilizar como credenciales el nombre de usuario admin y la contraseña obtenida en el paso anterior.
 
 ### Configuración de Sealed Secrets con actualización automática
 
 1. Se desplegará la aplicación [Sealed Secrets](https://github.com/bitnami-labs/sealed-secrets) como una aplicación de ArgoCD añadiendola en la lista de `argocd-apps`.
    El controlador de Sealed Secrets es responsable de descifrar los objetos SealedSecret y generar los Secretos originales en el clúster y tiene la clave privada necesaria para
-   descifrar los secretos sellados y cifrados con su clave pública. El Sealed Secrets Controller está vinculado al secreto TLS, que creamos a continuacion, que contiene la clave
+   descifrar los secretos sellados y cifrados con su clave pública. El Sealed Secrets Controller está vinculado al secreto TLS, que creamos a continuación, que contiene la clave
    pública y privada. Este controlador actúa como una capa adicional de seguridad, ya que solo el controlador tiene acceso a la clave privada necesaria para descifrar los secretos
    sellados. A continuación se muestra el contenido del fichero `gitops-con-argocd/argocd-apps/values-sealed-secrets.yaml`:
 
@@ -257,13 +258,14 @@ Dentro del repositorio ***kcfp-app-argocd-src*** generamos un secret, GHCR_PAT, 
   <img width="1792" alt="Screenshot 2023-06-07 at 15 06 48" src="https://github.com/maciuozz/gitops-con-argocd/assets/118285718/8706ef87-cbc3-4c42-89fd-47559e973a4b">
 
 
-5. Crear un nuevo Secret utilizando kubeseal para acceder al repositorio creado en DockerHub. Para cifrar (o sellar) un secreto, kubeseal interactúa con el controlador de
-   Sealed Secrets que tiene la clave privada correspondiente a esa clave pública. En el contexto de Sealed Secrets, "sellado" se utiliza para referirse al proceso de cifrar los
+5. Creamos un nuevo Secret utilizando kubeseal para acceder al repositorio creado en DockerHub. Para cifrar (o sellar) un secreto, kubeseal interactúa con el controlador de
+   Sealed Secrets (que tiene la clave privada correspondiente a esa clave pública). En el contexto de Sealed Secrets, "sellado" se utiliza para referirse al proceso de cifrar los
    secretos utilizando una clave pública. Cuando se crea un secreto utilizando kubeseal, el controlador de Sealed Secrets toma el secreto sin cifrar y lo cifra
    utilizando una clave pública específica del clúster. Esto garantiza que el secreto esté protegido de manera segura mientras se transfiere o almacena en un repositorio de código
    fuente, como Git. El secreto cifrado resultante se almacena en un archivo YAML, como sealed-secret.yaml. Este archivo YAML contiene el secreto cifrado y también incluye metadatos
    que indican al controlador de Sealed Secrets cómo descifrarlo cuando se despliega en el clúster.
-   ***--docker-server="https://index.docker.io/v1/"*** especifica el servidor de Docker llamado "index.docker.io". Este servidor es la URL de la API de índice de Docker. El índice de    Docker es responsable de realizar la búsqueda y recuperación de imágenes de contenedores en el Docker Hub. Este secret sirve para proporcionar a los pods del clúster de
+   ***--docker-server="https://index.docker.io/v1/"*** especifica el servidor de Docker llamado "index.docker.io". Este servidor es la URL de la API de índice de Docker. El índice de Docker es responsable de realizar la
+   búsqueda y recuperación de imágenes de contenedores en el Docker Hub. Este secret sirve para proporcionar a los pods del clúster de
    Kubernetes las credenciales de acceso al registro de Docker especificado, lo que permite que los contenedores y las aplicaciones desplegadas en el clúster puedan autenticarse y
    acceder a las imágenes almacenadas en ese registro. Será necesario recuperar el token de DockerHub creado anteriormente:
 
