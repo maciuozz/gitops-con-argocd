@@ -62,7 +62,7 @@ Dentro del repositorio ***kcfp-app-argocd-src*** generamos un secret, GHCR_PAT, 
    argocd***, respectivamente. Copiamos el contenido desde los repositorios descargados hacia los repositorios clonados y hacemos commit de los cambios (el repositorio ***gitops-con-
    argocd*** solo lo descargamos para tenerlo en local). 
 2. En Git, en el repositorio ***kcfp-argocd-app***, tenemos que configurar una ***Deploy key***. La deploy key sirve para dar acceso a ArgoCD al repositorio que contiene los
-   manifiestos de la apliacion y los seales secrets. Los sealed secrets son secretos encriptados que se utilizan para proteger información sensible, como contraseñas o claves de API.
+   manifiestos de la apliacion y los Sealed Secrets. Los Sealed Secrets son secretos encriptados que se utilizan para proteger información sensible, como contraseñas o claves de API.
    Al utilizar una deploy key, se puede otorgar acceso al repositorio que contiene los sealed secrets a herramientas como Sealed Secrets Controller, permitiendo que esta herramienta
    automatizada desencripte y despliegue los secretos de forma segura.Para ello será necesario realizar los siguientes pasos:
    - Crear la deploy key abriendo una terminal y ejecutar el comando:
@@ -171,10 +171,9 @@ Dentro del repositorio ***kcfp-app-argocd-src*** generamos un secret, GHCR_PAT, 
 ### Configuración de Sealed Secrets con actualización automática
 
 1. Se desplegará la aplicación [Sealed Secrets](https://github.com/bitnami-labs/sealed-secrets) como una aplicación de ArgoCD añadiendola en la lista de `argocd-apps`.
-   El controlador de Sealed Secrets sirve para sellar (Seal) los secretos sensibles en Kubernetes, proporcionando una capa adicional de seguridad. El controlador utiliza
-   el cifrado asimétrico para proteger los secretos, y se generan claves públicas y privadas para sellar y desellar los secretos. En el contexto de Sealed Secrets, "sellado" se
-   utiliza para referirse al proceso de cifrar los secretos utilizando una clave pública. A continuación se muestra el contenido del fichero `gitops-con-argocd/argocd-
-   apps/values-sealed-secrets.yaml`:
+   El controlador de Sealed Secrets es responsable de descifrar los objetos SealedSecret y generar los Secretos originales en el clúster y tiene la clave privada necesaria para
+   descifrar los secretos sellados y cifrados con su clave pública. Este controlador actúa como una capa adicional de seguridad, ya que solo el controlador tiene acceso a la clave
+   privada necesaria para descifrar los secretos sellados. A continuación se muestra el contenido del fichero `gitops-con-argocd/argocd-apps/values-sealed-secrets.yaml`:
 
     ```yaml
    applications:
@@ -258,7 +257,9 @@ Dentro del repositorio ***kcfp-app-argocd-src*** generamos un secret, GHCR_PAT, 
 
 
 5. Crear un nuevo Secret utilizando kubeseal para acceder al repositorio creado en DockerHub. El motivo de utilizar kubeseal es para aprovechar las capacidades de cifrado y sellado
-   proporcionadas por el controlador de Sealed Secrets. Cuando se crea un secreto utilizando kubeseal, el controlador de Sealed Secrets toma el secreto sin cifrar y lo cifra
+   proporcionadas por el controlador de Sealed Secrets. Para cifrar (o sellar) un secreto utilizando kubeseal, se utiliza la clave pública asociada a la clave privada del controlador
+   de Sealed Secrets. El controlador de Sealed Secrets tiene la clave privada correspondiente a esa clave pública y es capaz de descifrar los secretos sellados utilizando su clave privada.. En el contexto de Sealed Secrets, "sellado" se
+   utiliza para referirse al proceso de cifrar los secretos utilizando una clave pública.Cuando se crea un secreto utilizando kubeseal, el controlador de Sealed Secrets toma el secreto sin cifrar y lo cifra
    utilizando una clave pública específica del clúster. Esto garantiza que el secreto esté protegido de manera segura mientras se transfiere o almacena en un repositorio de código
    fuente, como Git. El secreto cifrado resultante se almacena en un archivo YAML, como sealed-secret.yaml. Este archivo YAML contiene el secreto cifrado y también incluye metadatos
    que indican al controlador de Sealed Secrets cómo descifrarlo cuando se despliega en el clúster.
@@ -285,13 +286,13 @@ Dentro del repositorio ***kcfp-app-argocd-src*** generamos un secret, GHCR_PAT, 
     rm simple_secret.yaml
     ```
 
-6. Mover el fichero creado `sealed-secret.yaml` al repositorio ***kcfp-argocd-app***:
+7. Mover el fichero creado `sealed-secret.yaml` al repositorio ***kcfp-argocd-app***:
 
     ```sh
     mv sealed-secret.yaml ~/desktop/kcfp-argocd-app/helm/templates
     ```
 
-7. Crear un nuevo secret que proporciona las credenciales de acceso al registry de Docker necesarias para el componente argocd-image-updater de Argo CD, permitiéndole acceder y
+8. Crear un nuevo secret que proporciona las credenciales de acceso al registry de Docker necesarias para el componente argocd-image-updater de Argo CD, permitiéndole acceder y
     descargar las imágenes de Docker necesarias durante el proceso de despliegue y actualización de aplicaciones.
     ***--docker-server="https://registry-1.docker.io/"*** especifica el servidor de Docker llamado "registry-1.docker.io". Este servidor es la URL principal del Docker
     Hub, que es un registro de Docker público ampliamente utilizado. Se utiliza para almacenar y distribuir imágenes de contenedores. Será necesario recuperar el
@@ -316,12 +317,12 @@ Dentro del repositorio ***kcfp-app-argocd-src*** generamos un secret, GHCR_PAT, 
     rm reg_cred.yaml
     ```
 
-8. Mover el fichero creado `sealed-secret-reg-cred.yaml` al repositorio ***kcfp-argocd-app***:
+9. Mover el fichero creado `sealed-secret-reg-cred.yaml` al repositorio ***kcfp-argocd-app***:
 
     ```sh
     mv sealed-secret-reg-cred.yaml ~/desktop/kcfp-argocd-app/helm/templates
     ```
-9. Subir los ficheros `sealed-secret.yaml` y `sealed-secret-reg-cred.yaml` añadiendolos al repositorio ***kcfp-argocd-app***:
+10. Subir los ficheros `sealed-secret.yaml` y `sealed-secret-reg-cred.yaml` añadiendolos al repositorio ***kcfp-argocd-app***:
 
     ```sh
     git add .
@@ -329,7 +330,7 @@ Dentro del repositorio ***kcfp-app-argocd-src*** generamos un secret, GHCR_PAT, 
     git push
     ```
 
-10. Antes de realizar el despliegue de la aplicación, transformamos nuestro repositorio de DockerHub en privado. En el mundo real, es muy común tener repositorios privados
+11. Antes de realizar el despliegue de la aplicación, transformamos nuestro repositorio de DockerHub en privado. En el mundo real, es muy común tener repositorios privados
     de Docker para garantizar la seguridad y la gestión adecuada de las imágenes utilizadas en las aplicaciones. Para ello, dentro del repositorio, vamos a ***Settings --> Make
     private***:
 
