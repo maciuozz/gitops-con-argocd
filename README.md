@@ -160,7 +160,7 @@ Dentro del repositorio ***kcfp-app-argocd-src*** generamos un secret, GHCR_PAT, 
 
 12. Realizar un port-forward al servicio de argocd al puerto 8080 local:
 
-       kubectl port-forward service/argocd-server -n argocd 8080:443
+        kubectl port-forward service/argocd-server -n argocd 8080:443
 
 13. Obtener la contraseña de acceso a argocd mediante el siguiente comando:
 
