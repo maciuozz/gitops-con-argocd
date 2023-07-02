@@ -259,7 +259,7 @@ Dentro del repositorio ***kcfp-app-argocd-src*** generamos un secret, GHCR_PAT, 
 
 
 5. Creamos un nuevo Secret utilizando kubeseal para acceder al repositorio creado en DockerHub. Para cifrar (o sellar) un secreto, kubeseal interactúa con el controlador de
-   Sealed Secrets (que tiene la clave privada correspondiente a esa clave pública). En el contexto de Sealed Secrets, "sellado" se utiliza para referirse al proceso de cifrar los
+   Sealed Secrets. En el contexto de Sealed Secrets, "sellado" se utiliza para referirse al proceso de cifrar los
    secretos utilizando una clave pública. Cuando se crea un secreto utilizando kubeseal, el controlador de Sealed Secrets toma el secreto sin cifrar y lo cifra
    utilizando una clave pública específica del clúster. Esto garantiza que el secreto esté protegido de manera segura mientras se transfiere o almacena en un repositorio de código
    fuente, como Git. El secreto cifrado resultante se almacena en un archivo YAML, como sealed-secret.yaml. Este archivo YAML contiene el secreto cifrado y también incluye metadatos
