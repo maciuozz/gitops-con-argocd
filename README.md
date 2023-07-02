@@ -145,8 +145,8 @@ Dentro del repositorio ***kcfp-app-argocd-src*** generamos un secret, GHCR_PAT, 
 
 10. Añadimos el repositorio helm de argocd:
 
-       helm repo add argo https://argoproj.github.io/argo-helm
-       helm repo update
+        helm repo add argo https://argoproj.github.io/argo-helm
+        helm repo update
    
 11. Desde la pestaña ubicada en el repositorio ***gitops-con-argocd*** desplegar el helm chart de argocd utilizando el fichero `argocd/values.yaml` y el fichero `argocd/values-secret.yaml`:
 
